@@ -28,65 +28,43 @@ export default function Navbar() {
   };
 
   return (
-    <nav
-      data-testid="navbar"
+    <nav data-testid="navbar"
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled ? "bg-[#0B0B0D]/95 backdrop-blur-md border-b border-[#333340]" : "bg-transparent"
-      }`}
-    >
+        scrolled ? "bg-[#F5F0E8]/95 backdrop-blur-md border-b border-[#D4CBB8] shadow-sm" : "bg-transparent"
+      }`}>
       <div className="max-w-7xl mx-auto px-6 md:px-12 py-4 flex items-center justify-between">
-        <a href="#" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="font-mono-label text-xs text-[#CCFF00] tracking-widest cursor-pointer" data-testid="nav-logo">
+        <a href="#" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          className="font-mono-label text-xs text-[#4A7A12] tracking-widest cursor-pointer" data-testid="nav-logo">
           My portfolio
         </a>
 
-        {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-8">
           {navLinks.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              className="font-mono-label text-[10px] text-[#A1A1AA] hover:text-[#CCFF00] transition-colors duration-200"
-              data-testid={`nav-${link.label.toLowerCase().replace(/\s/g, '-')}`}
-            >
+            <a key={link.href} href={link.href}
+              className="font-mono-label text-[10px] text-[#6B7280] hover:text-[#4A7A12] transition-colors duration-200"
+              data-testid={`nav-${link.label.toLowerCase().replace(/\s/g, '-')}`}>
               {link.label}
             </a>
           ))}
-          <button
-            onClick={handleLogin}
-            className="font-mono-label text-[10px] bg-[#CCFF00] text-[#0B0B0D] px-4 py-2 hover:bg-[#AADD00] transition-colors"
-            data-testid="nav-admin-login"
-          >
+          <button onClick={handleLogin}
+            className="font-mono-label text-[10px] bg-[#4A7A12] text-white px-4 py-2 hover:bg-[#3D6B0F] transition-colors shadow-sm"
+            data-testid="nav-admin-login">
             Admin
           </button>
         </div>
 
-        {/* Mobile menu toggle */}
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          className="md:hidden text-[#FAFAFA]"
-          data-testid="nav-mobile-toggle"
-        >
+        <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden text-[#1A1A1A]" data-testid="nav-mobile-toggle">
           {menuOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
       </div>
 
-      {/* Mobile menu */}
       {menuOpen && (
-        <div className="md:hidden bg-[#0B0B0D] border-t border-[#333340] px-6 py-6 space-y-4" data-testid="nav-mobile-menu">
+        <div className="md:hidden bg-[#F5F0E8] border-t border-[#D4CBB8] px-6 py-6 space-y-4" data-testid="nav-mobile-menu">
           {navLinks.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              onClick={() => setMenuOpen(false)}
-              className="block font-mono-label text-xs text-[#A1A1AA] hover:text-[#CCFF00] transition-colors"
-            >
-              {link.label}
-            </a>
+            <a key={link.href} href={link.href} onClick={() => setMenuOpen(false)}
+              className="block font-mono-label text-xs text-[#6B7280] hover:text-[#4A7A12] transition-colors">{link.label}</a>
           ))}
-          <button
-            onClick={handleLogin}
-            className="w-full font-mono-label text-xs bg-[#CCFF00] text-[#0B0B0D] px-4 py-3 hover:bg-[#AADD00] transition-colors"
-          >
+          <button onClick={handleLogin} className="w-full font-mono-label text-xs bg-[#4A7A12] text-white px-4 py-3 hover:bg-[#3D6B0F] transition-colors">
             Admin Login
           </button>
         </div>

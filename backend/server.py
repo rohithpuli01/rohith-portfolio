@@ -166,11 +166,19 @@ def get_default_content(section):
             "name": "ROHITH PULI",
             "title": "MOTION GRAPHIC DESIGNER",
             "subtitle": "Crafting visual stories through motion & design",
-            "profile_image": "https://images.pexels.com/photos/8242769/pexels-photo-8242769.jpeg"
+            "profile_image": "https://images.pexels.com/photos/8242769/pexels-photo-8242769.jpeg",
+            "cta_primary": "VIEW WORK",
+            "cta_secondary": "GET IN TOUCH",
+            "badge_text": "AVAILABLE FOR HIRE",
+            "marquee_text": "MOTION GRAPHIC DESIGNER \u2022 VISUAL STORYTELLER \u2022 CREATIVE DIRECTOR"
         },
         "about": {
             "section": "about",
+            "heading": "About",
+            "heading_accent": "Me",
             "bio": "I'm Rohith Puli, a Motion Graphic Designer passionate about bringing ideas to life through captivating visual storytelling. With expertise in animation, video editing, and visual effects, I create compelling content that engages and inspires.",
+            "years_exp": "5+",
+            "projects_count": "50+",
             "tools": ["After Effects", "Premiere Pro", "Cinema 4D", "Blender", "Photoshop", "Illustrator", "Figma", "DaVinci Resolve"],
             "skills": [
                 {"name": "Motion Graphics", "level": 95},
@@ -186,8 +194,21 @@ def get_default_content(section):
                 {"role": "Junior Designer", "company": "Media House", "period": "2018 - 2020", "description": "Started career creating social media animations"}
             ]
         },
+        "projects": {
+            "section": "projects",
+            "heading": "Projects",
+            "label": "SELECTED WORK"
+        },
+        "gallery": {
+            "section": "gallery",
+            "heading": "Visual",
+            "heading_accent": "Archive",
+            "label": "GALLERY"
+        },
         "resume": {
             "section": "resume",
+            "heading": "My",
+            "heading_accent": "Resume",
             "education": [
                 {"degree": "Bachelor of Fine Arts", "school": "Design University", "year": "2018", "description": "Specialized in Digital Media & Animation"}
             ],
@@ -196,19 +217,25 @@ def get_default_content(section):
         },
         "wheel": {
             "section": "wheel",
+            "heading": "Lucky",
+            "heading_accent": "Wheel",
+            "subtitle": "Feeling lucky? Spin the wheel to win exclusive discounts on my design services!",
             "segments": [
-                {"label": "10% OFF", "color": "#CCFF00"},
-                {"label": "15% OFF", "color": "#23232C"},
-                {"label": "5% OFF", "color": "#CCFF00"},
-                {"label": "20% OFF", "color": "#23232C"},
-                {"label": "FREE CONSULT", "color": "#CCFF00"},
-                {"label": "25% OFF", "color": "#23232C"},
-                {"label": "LUCKY DIP", "color": "#CCFF00"},
-                {"label": "30% OFF", "color": "#23232C"}
+                {"label": "10% OFF", "color": "#4A7A12"},
+                {"label": "15% OFF", "color": "#E8E0D0"},
+                {"label": "5% OFF", "color": "#4A7A12"},
+                {"label": "20% OFF", "color": "#E8E0D0"},
+                {"label": "FREE CONSULT", "color": "#4A7A12"},
+                {"label": "25% OFF", "color": "#E8E0D0"},
+                {"label": "LUCKY DIP", "color": "#4A7A12"},
+                {"label": "30% OFF", "color": "#E8E0D0"}
             ]
         },
         "contact": {
             "section": "contact",
+            "heading": "Get In",
+            "heading_accent": "Touch",
+            "subtitle": "Have a project in mind? Let's create something amazing together. Drop me a message and I'll get back to you soon.",
             "email": "rohith@example.com",
             "phone": "+1 234 567 890",
             "location": "New York, USA",
@@ -219,6 +246,17 @@ def get_default_content(section):
                 "linkedin": "https://linkedin.com/in/rohithpuli",
                 "youtube": "https://youtube.com/@rohithpuli"
             }
+        },
+        "feedback": {
+            "section": "feedback",
+            "heading": "Client",
+            "heading_accent": "Reviews",
+            "cta_text": "WRITE A REVIEW"
+        },
+        "footer": {
+            "section": "footer",
+            "tagline": "Motion Graphic Designer",
+            "copyright": "Made with love by Rohith Puli"
         }
     }
     return defaults.get(section, {"section": section})

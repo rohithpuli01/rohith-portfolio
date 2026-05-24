@@ -5,24 +5,25 @@
 @import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700&family=Manrope:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  --bg-primary: #0B0B0D;
-  --bg-surface: #17171C;
-  --bg-surface-accent: #23232C;
+  --bg-paper: #F5F0E8;
+  --bg-card: #FFFFFF;
+  --bg-card-alt: #EDE8DE;
+  --color-accent: #4A7A12;
   --color-lime: #CCFF00;
-  --color-lime-hover: #AADD00;
-  --text-main: #FAFAFA;
-  --text-muted: #A1A1AA;
-  --border-color: #333340;
+  --color-lime-bg: #E8F5C8;
+  --text-dark: #1A1A1A;
+  --text-muted: #6B7280;
+  --border-warm: #D4CBB8;
 }
 
 @layer base {
   * {
-    @apply border-[#333340];
+    @apply border-[#D4CBB8];
   }
   body {
     font-family: 'Manrope', sans-serif;
-    background-color: #0B0B0D;
-    color: #FAFAFA;
+    background-color: #F5F0E8;
+    color: #1A1A1A;
     overflow-x: hidden;
   }
   h1, h2, h3, h4, h5 {
@@ -55,54 +56,96 @@
   letter-spacing: 0.2em;
 }
 
+/* Paper texture overlay */
+.paper-texture {
+  position: relative;
+}
+.paper-texture::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("https://images.unsplash.com/photo-1603484477859-abe6a73f9366?w=1920&q=30");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.06;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Grain noise overlay for paper feel */
+.paper-grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
 .torn-edge {
   clip-path: polygon(0% 2%, 3% 0%, 8% 3%, 12% 0%, 18% 2%, 22% 0%, 28% 1%, 33% 0%, 38% 3%, 42% 0%, 48% 2%, 52% 0%, 58% 1%, 62% 0%, 68% 3%, 72% 0%, 78% 2%, 82% 0%, 88% 1%, 92% 0%, 97% 2%, 100% 0%, 100% 98%, 97% 100%, 92% 97%, 88% 100%, 82% 98%, 78% 100%, 72% 99%, 68% 100%, 62% 97%, 58% 100%, 52% 98%, 48% 100%, 42% 99%, 38% 100%, 33% 97%, 28% 100%, 22% 98%, 18% 100%, 12% 99%, 8% 100%, 3% 97%, 0% 100%);
 }
 
-.neon-glow {
-  box-shadow: 0 0 20px rgba(204, 255, 0, 0.3), 0 0 40px rgba(204, 255, 0, 0.1);
+.accent-glow {
+  box-shadow: 0 4px 20px rgba(74, 122, 18, 0.15), 0 2px 8px rgba(74, 122, 18, 0.08);
 }
 
-.neon-text-glow {
-  text-shadow: 0 0 20px rgba(204, 255, 0, 0.5), 0 0 40px rgba(204, 255, 0, 0.2);
-}
-
-.hover-brutalist {
+.hover-paper {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-.hover-brutalist:hover {
-  transform: translateY(-2px);
-  box-shadow: 4px 4px 0px #CCFF00;
+.hover-paper:hover {
+  transform: translateY(-3px);
+  box-shadow: 4px 4px 0px #4A7A12, 0 8px 24px rgba(0,0,0,0.06);
+}
+
+/* Tape decoration */
+.tape-strip {
+  position: relative;
+}
+.tape-strip::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-2deg);
+  width: 60px;
+  height: 16px;
+  background: rgba(204, 255, 0, 0.5);
+  z-index: 2;
+}
+
+/* Paper fold corner */
+.paper-fold {
+  position: relative;
+  overflow: hidden;
+}
+.paper-fold::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 24px 24px 0;
+  border-color: transparent #F5F0E8 transparent transparent;
+  transition: border-width 0.2s ease;
+}
+.paper-fold:hover::after {
+  border-width: 0 32px 32px 0;
 }
 
 /* Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: #0B0B0D;
-}
-::-webkit-scrollbar-thumb {
-  background: #333340;
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #CCFF00;
-}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #F5F0E8; }
+::-webkit-scrollbar-thumb { background: #D4CBB8; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #4A7A12; }
 
 /* Swiper custom */
-.swiper-button-next, .swiper-button-prev {
-  color: #CCFF00 !important;
-}
-.swiper-pagination-bullet {
-  background: #333340 !important;
-}
-.swiper-pagination-bullet-active {
-  background: #CCFF00 !important;
-}
+.swiper-button-next, .swiper-button-prev { color: #4A7A12 !important; }
+.swiper-pagination-bullet { background: #D4CBB8 !important; }
+.swiper-pagination-bullet-active { background: #4A7A12 !important; }
 
 /* Selection */
-::selection {
-  background: #CCFF00;
-  color: #0B0B0D;
-}
+::selection { background: #CCFF00; color: #1A1A1A; }

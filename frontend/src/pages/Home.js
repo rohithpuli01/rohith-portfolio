@@ -20,11 +20,15 @@ export default function Home() {
   const [resumeData, setResumeData] = useState(null);
   const [wheelData, setWheelData] = useState(null);
   const [contactData, setContactData] = useState(null);
+  const [projectsContent, setProjectsContent] = useState(null);
+  const [galleryContent, setGalleryContent] = useState(null);
+  const [feedbackContent, setFeedbackContent] = useState(null);
+  const [footerData, setFooterData] = useState(null);
 
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        const [hero, about, proj, gal, resume, wheel, contact] = await Promise.all([
+        const [hero, about, proj, gal, resume, wheel, contact, projContent, galContent, fbContent, footer] = await Promise.all([
           fetch(`${API}/content/hero`).then(r => r.json()),
           fetch(`${API}/content/about`).then(r => r.json()),
           fetch(`${API}/projects`).then(r => r.json()),
@@ -32,6 +36,10 @@ export default function Home() {
           fetch(`${API}/content/resume`).then(r => r.json()),
           fetch(`${API}/content/wheel`).then(r => r.json()),
           fetch(`${API}/content/contact`).then(r => r.json()),
+          fetch(`${API}/content/projects`).then(r => r.json()),
+          fetch(`${API}/content/gallery`).then(r => r.json()),
+          fetch(`${API}/content/feedback`).then(r => r.json()),
+          fetch(`${API}/content/footer`).then(r => r.json()),
         ]);
         setHeroData(hero);
         setAboutData(about);
@@ -40,6 +48,10 @@ export default function Home() {
         setResumeData(resume);
         setWheelData(wheel);
         setContactData(contact);
+        setProjectsContent(projContent);
+        setGalleryContent(galContent);
+        setFeedbackContent(fbContent);
+        setFooterData(footer);
       } catch (e) {
         console.error("Failed to fetch data:", e);
       }
@@ -48,17 +60,17 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#0B0B0D]" data-testid="home-page">
+    <div className="min-h-screen bg-[#F5F0E8]" data-testid="home-page">
       <Navbar />
       {heroData && <HeroSection data={heroData} />}
       {aboutData && <AboutSection data={aboutData} />}
-      {projects.length > 0 && <ProjectsSection projects={projects} />}
-      {gallery.length > 0 && <GallerySection items={gallery} />}
+      {projects.length > 0 && <ProjectsSection projects={projects} contentData={projectsContent} />}
+      {gallery.length > 0 && <GallerySection items={gallery} contentData={galleryContent} />}
       {resumeData && <ResumeSection data={resumeData} aboutData={aboutData} />}
       {wheelData && <LuckyWheel data={wheelData} />}
       {contactData && <ContactSection data={contactData} />}
-      <FeedbackSection />
-      <Footer contactData={contactData} />
+      <FeedbackSection contentData={feedbackContent} />
+      <Footer contactData={contactData} footerData={footerData} />
     </div>
   );
 }
