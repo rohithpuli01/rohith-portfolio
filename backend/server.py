@@ -304,9 +304,12 @@ async def send_contact(request: Request):
             </div>
         </div>
         """
+        # Get portfolio owner email from contact settings
+        owner_contact = await db.portfolio_content.find_one({"section": "contact"}, {"_id": 0})
+        owner_email = owner_contact.get("email", email) if owner_contact else email
         params = {
             "from": SENDER_EMAIL,
-            "to": [email],
+            "to": [owner_email],
             "subject": f"Portfolio Contact from {name}",
             "html": html_content
         }

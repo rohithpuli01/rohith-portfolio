@@ -158,6 +158,18 @@ export default function LuckyWheel({ data }) {
             </button>
           </div>
 
+          {/* External spin button for better UX */}
+          {!result && (
+            <button
+              onClick={handleSpin}
+              disabled={spinning}
+              className="mt-8 bg-[#CCFF00] text-[#0B0B0D] font-mono-label text-[11px] px-8 py-3 hover:bg-[#AADD00] disabled:opacity-50 transition-all hover-brutalist neon-glow"
+              data-testid="wheel-spin-external-btn"
+            >
+              {spinning ? "SPINNING..." : "SPIN THE WHEEL"}
+            </button>
+          )}
+
           {/* Result */}
           {result && (
             <motion.div
