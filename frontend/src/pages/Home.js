@@ -7,6 +7,7 @@ import GallerySection from "@/components/GallerySection";
 import ResumeSection from "@/components/ResumeSection";
 import LuckyWheel from "@/components/LuckyWheel";
 import ContactSection from "@/components/ContactSection";
+import FeedbackSection from "@/components/FeedbackSection";
 import Footer from "@/components/Footer";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -56,6 +57,7 @@ export default function Home() {
       {resumeData && <ResumeSection data={resumeData} aboutData={aboutData} />}
       {wheelData && <LuckyWheel data={wheelData} />}
       {contactData && <ContactSection data={contactData} />}
+      <FeedbackSection />
       <Footer contactData={contactData} />
     </div>
   );

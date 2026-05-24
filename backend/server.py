@@ -32,6 +32,20 @@ api_router = APIRouter(prefix="/api")
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+# --- Rate Limiting ---
+rate_limit_store = {}  # {ip: {endpoint: [timestamps]}}
+
+def check_rate_limit(ip: str, endpoint: str, max_requests: int = 5, window_seconds: int = 60):
+    now = datetime.now(timezone.utc)
+    key = f"{ip}:{endpoint}"
+    if key not in rate_limit_store:
+        rate_limit_store[key] = []
+    # Clean old entries
+    rate_limit_store[key] = [t for t in rate_limit_store[key] if (now - t).total_seconds() < window_seconds]
+    if len(rate_limit_store[key]) >= max_requests:
+        raise HTTPException(status_code=429, detail="Too many requests. Please try again later.")
+    rate_limit_store[key].append(now)
+
 # --- Auth Helpers ---
 async def get_current_user(request: Request):
     session_token = request.cookies.get("session_token")
@@ -274,6 +288,8 @@ async def delete_gallery_item(item_id: str, user=Depends(get_current_user)):
 # --- Contact Form ---
 @api_router.post("/contact")
 async def send_contact(request: Request):
+    client_ip = request.client.host if request.client else "unknown"
+    check_rate_limit(client_ip, "contact", max_requests=5, window_seconds=300)
     body = await request.json()
     name = body.get("name", "")
     email = body.get("email", "")
@@ -321,7 +337,9 @@ async def send_contact(request: Request):
 
 # --- Lucky Wheel Spin ---
 @api_router.post("/wheel/spin")
-async def spin_wheel():
+async def spin_wheel(request: Request):
+    client_ip = request.client.host if request.client else "unknown"
+    check_rate_limit(client_ip, "wheel_spin", max_requests=10, window_seconds=60)
     import random
     content = await db.portfolio_content.find_one({"section": "wheel"}, {"_id": 0})
     if not content:
@@ -373,15 +391,81 @@ async def get_file(file_id: str):
     content_type = "image/jpeg"
     if doc.get("file_type") == "video":
         content_type = "video/mp4"
+    elif doc.get("file_type") == "pdf" or doc.get("file_name", "").endswith(".pdf"):
+        content_type = "application/pdf"
     elif "png" in doc.get("file_name", ""):
         content_type = "image/png"
-    return StreamingResponse(io.BytesIO(binary), media_type=content_type)
+    headers = {}
+    if content_type == "application/pdf":
+        headers["Content-Disposition"] = f'attachment; filename="{doc.get("file_name", "resume.pdf")}"'
+    return StreamingResponse(io.BytesIO(binary), media_type=content_type, headers=headers)
 
 # --- Contacts list for admin ---
 @api_router.get("/contacts")
 async def get_contacts(user=Depends(get_current_user)):
     contacts = await db.contacts.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
     return contacts
+
+# --- Feedback / Ratings ---
+@api_router.get("/feedback")
+async def get_feedback():
+    feedback = await db.feedback.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return feedback
+
+@api_router.post("/feedback")
+async def add_feedback(request: Request):
+    client_ip = request.client.host if request.client else "unknown"
+    check_rate_limit(client_ip, "feedback", max_requests=3, window_seconds=300)
+    body = await request.json()
+    name = body.get("name", "").strip()
+    rating = body.get("rating", 0)
+    comment = body.get("comment", "").strip()
+    company = body.get("company", "").strip()
+    if not name or not comment or not rating:
+        raise HTTPException(status_code=400, detail="Name, rating and comment are required")
+    if not (1 <= rating <= 5):
+        raise HTTPException(status_code=400, detail="Rating must be between 1 and 5")
+    feedback_doc = {
+        "feedback_id": f"fb_{uuid.uuid4().hex[:8]}",
+        "name": name,
+        "company": company,
+        "rating": rating,
+        "comment": comment,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.feedback.insert_one(feedback_doc)
+    return {"status": "created", "feedback_id": feedback_doc["feedback_id"]}
+
+@api_router.delete("/feedback/{feedback_id}")
+async def delete_feedback(feedback_id: str, user=Depends(get_current_user)):
+    await db.feedback.delete_one({"feedback_id": feedback_id})
+    return {"status": "deleted"}
+
+# --- Resume Upload ---
+@api_router.post("/resume/upload")
+async def upload_resume(request: Request, user=Depends(get_current_user)):
+    body = await request.json()
+    file_data = body.get("file_data", "")
+    file_name = body.get("file_name", "resume.pdf")
+    if not file_data:
+        raise HTTPException(status_code=400, detail="No file data")
+    # Store resume
+    resume_doc = {
+        "file_id": "resume_latest",
+        "file_name": file_name,
+        "file_type": "pdf",
+        "data": file_data,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.uploads.update_one({"file_id": "resume_latest"}, {"$set": resume_doc}, upsert=True)
+    resume_url = f"/api/files/resume_latest"
+    # Update resume content section
+    await db.portfolio_content.update_one(
+        {"section": "resume"},
+        {"$set": {"resume_url": resume_url}},
+        upsert=True
+    )
+    return {"status": "uploaded", "url": resume_url}
 
 # Include router & middleware
 app.include_router(api_router)

@@ -8,6 +8,7 @@ const navLinks = [
   { label: "Resume", href: "#resume" },
   { label: "Spin & Win", href: "#wheel" },
   { label: "Contact", href: "#contact" },
+  { label: "Reviews", href: "#feedback" },
 ];
 
 export default function Navbar() {
@@ -34,8 +35,8 @@ export default function Navbar() {
       }`}
     >
       <div className="max-w-7xl mx-auto px-6 md:px-12 py-4 flex items-center justify-between">
-        <a href="#" className="font-mono-label text-xs text-[#CCFF00] tracking-widest" data-testid="nav-logo">
-          RP.
+        <a href="#" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="font-mono-label text-xs text-[#CCFF00] tracking-widest cursor-pointer" data-testid="nav-logo">
+          My portfolio
         </a>
 
         {/* Desktop nav */}

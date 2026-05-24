@@ -16,7 +16,7 @@ export default function Footer({ contactData }) {
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row items-center justify-between gap-8">
           <div>
-            <span className="font-mono-label text-xs text-[#CCFF00] tracking-widest">RP.</span>
+            <span className="font-mono-label text-xs text-[#CCFF00] tracking-widest">My portfolio</span>
             <p className="text-[#A1A1AA] text-xs mt-2">Motion Graphic Designer</p>
           </div>
 

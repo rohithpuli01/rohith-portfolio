@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import {
   LogOut, Save, Plus, Trash2, Upload, ArrowLeft,
-  User, Briefcase, Image, FileText, Phone, Gift
+  User, Briefcase, Image, FileText, Phone, Gift, Star, MessageSquare
 } from "lucide-react";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -16,6 +16,7 @@ const tabs = [
   { id: "resume", label: "Resume", icon: FileText },
   { id: "contact", label: "Contact", icon: Phone },
   { id: "wheel", label: "Wheel", icon: Gift },
+  { id: "feedback", label: "Reviews", icon: Star },
 ];
 
 export default function AdminPanel() {
@@ -31,6 +32,7 @@ export default function AdminPanel() {
   const [resumeData, setResumeData] = useState(null);
   const [contactData, setContactData] = useState(null);
   const [wheelData, setWheelData] = useState(null);
+  const [feedbacks, setFeedbacks] = useState([]);
 
   const checkAuth = useCallback(async () => {
     if (window.location.hash?.includes("session_id=")) {
@@ -57,7 +59,7 @@ export default function AdminPanel() {
     if (!user) return;
     const fetchAll = async () => {
       try {
-        const [hero, about, proj, gal, resume, contact, wheel] = await Promise.all([
+        const [hero, about, proj, gal, resume, contact, wheel, fb] = await Promise.all([
           fetch(`${API}/content/hero`, { credentials: "include" }).then((r) => r.json()),
           fetch(`${API}/content/about`, { credentials: "include" }).then((r) => r.json()),
           fetch(`${API}/projects`, { credentials: "include" }).then((r) => r.json()),
@@ -65,6 +67,7 @@ export default function AdminPanel() {
           fetch(`${API}/content/resume`, { credentials: "include" }).then((r) => r.json()),
           fetch(`${API}/content/contact`, { credentials: "include" }).then((r) => r.json()),
           fetch(`${API}/content/wheel`, { credentials: "include" }).then((r) => r.json()),
+          fetch(`${API}/feedback`, { credentials: "include" }).then((r) => r.json()),
         ]);
         setHeroData(hero);
         setAboutData(about);
@@ -73,6 +76,7 @@ export default function AdminPanel() {
         setResumeData(resume);
         setContactData(contact);
         setWheelData(wheel);
+        setFeedbacks(fb);
       } catch (e) {
         console.error(e);
       }
@@ -467,8 +471,38 @@ export default function AdminPanel() {
             <div className="space-y-4" data-testid="admin-resume-editor">
               <h3 className="text-lg font-bold mb-4" style={{ fontFamily: 'Unbounded' }}>Edit Resume</h3>
               <div>
-                <label className={labelCls}>RESUME DOWNLOAD URL</label>
-                <input className={inputCls} value={resumeData.resume_url || ""} onChange={(e) => setResumeData({ ...resumeData, resume_url: e.target.value })} data-testid="admin-resume-url" />
+                <label className={labelCls}>RESUME PDF</label>
+                <div className="flex gap-2 items-center">
+                  <input className={inputCls} value={resumeData.resume_url || ""} onChange={(e) => setResumeData({ ...resumeData, resume_url: e.target.value })} data-testid="admin-resume-url" placeholder="URL will appear after upload" readOnly />
+                  <label className={`${btnCls} cursor-pointer whitespace-nowrap`}>
+                    <Upload size={14} /> Upload PDF
+                    <input type="file" accept=".pdf" className="hidden" onChange={async (e) => {
+                      const file = e.target.files[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onload = async () => {
+                        try {
+                          const res = await fetch(`${API}/resume/upload`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            credentials: "include",
+                            body: JSON.stringify({ file_data: reader.result, file_name: file.name }),
+                          });
+                          const json = await res.json();
+                          const fullUrl = `${process.env.REACT_APP_BACKEND_URL}${json.url}`;
+                          setResumeData({ ...resumeData, resume_url: fullUrl });
+                          toast.success("Resume uploaded!");
+                        } catch { toast.error("Upload failed"); }
+                      };
+                      reader.readAsDataURL(file);
+                    }} />
+                  </label>
+                </div>
+                {resumeData.resume_url && (
+                  <a href={resumeData.resume_url} target="_blank" rel="noopener noreferrer" className="text-[#CCFF00] text-xs mt-2 inline-block hover:underline">
+                    View current resume
+                  </a>
+                )}
               </div>
               <div>
                 <label className={labelCls}>EDUCATION</label>
@@ -563,6 +597,50 @@ export default function AdminPanel() {
               <button onClick={() => saveContent("wheel", wheelData)} className={btnCls} data-testid="admin-wheel-save">
                 <Save size={14} /> SAVE WHEEL
               </button>
+            </div>
+          )}
+
+          {/* Feedback Management */}
+          {activeTab === "feedback" && (
+            <div className="space-y-4" data-testid="admin-feedback-editor">
+              <h3 className="text-lg font-bold mb-4" style={{ fontFamily: 'Unbounded' }}>Manage Reviews</h3>
+              <p className="text-xs text-[#A1A1AA] mb-4">{feedbacks.length} reviews total</p>
+              {feedbacks.length === 0 ? (
+                <div className="text-center py-12 border border-dashed border-[#333340]">
+                  <MessageSquare size={32} className="text-[#333340] mx-auto mb-3" />
+                  <p className="text-sm text-[#A1A1AA]">No reviews yet</p>
+                </div>
+              ) : (
+                feedbacks.map((fb, i) => (
+                  <div key={fb.feedback_id || i} className="bg-[#17171C] border border-[#333340] p-4 flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-sm font-semibold text-[#FAFAFA]">{fb.name}</span>
+                        {fb.company && <span className="text-xs text-[#A1A1AA]">- {fb.company}</span>}
+                      </div>
+                      <div className="flex gap-0.5 mb-2">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <Star key={s} size={12} className={s <= fb.rating ? "text-[#CCFF00] fill-[#CCFF00]" : "text-[#333340]"} />
+                        ))}
+                      </div>
+                      <p className="text-xs text-[#A1A1AA]">"{fb.comment}"</p>
+                    </div>
+                    <button
+                      onClick={async () => {
+                        try {
+                          await fetch(`${API}/feedback/${fb.feedback_id}`, { method: "DELETE", credentials: "include" });
+                          setFeedbacks(feedbacks.filter((f) => f.feedback_id !== fb.feedback_id));
+                          toast.success("Review deleted");
+                        } catch { toast.error("Failed to delete"); }
+                      }}
+                      className="text-red-400 hover:text-red-300 flex-shrink-0"
+                      data-testid={`admin-delete-feedback-${i}`}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))
+              )}
             </div>
           )}
         </div>

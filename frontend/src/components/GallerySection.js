@@ -44,14 +44,19 @@ export default function GallerySection({ items }) {
               data-testid={`gallery-item-${i}`}
             >
               {item.type === "video" ? (
-                <div className="w-full h-full relative">
-                  <img
-                    src={item.thumbnail || item.url}
-                    alt={item.title}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                <div className="w-full h-full relative group/vid">
+                  <video
+                    src={item.url}
+                    poster={item.thumbnail || ""}
+                    muted
+                    loop
+                    playsInline
+                    onMouseEnter={(e) => e.target.play()}
+                    onMouseLeave={(e) => { e.target.pause(); e.target.currentTime = 0; }}
+                    className="w-full h-full object-cover"
                   />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-12 h-12 rounded-full bg-[#CCFF00]/90 flex items-center justify-center">
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="w-12 h-12 rounded-full bg-[#CCFF00]/90 flex items-center justify-center group-hover/vid:opacity-0 transition-opacity">
                       <Play size={20} className="text-[#0B0B0D] ml-0.5" />
                     </div>
                   </div>
@@ -105,7 +110,8 @@ export default function GallerySection({ items }) {
                   src={selectedItem.url}
                   controls
                   autoPlay
-                  className="w-full h-full object-contain border border-[#333340]"
+                  className="w-full max-h-[80vh] object-contain border border-[#333340] bg-[#0B0B0D]"
+                  data-testid="gallery-lightbox-video"
                 />
               ) : (
                 <img

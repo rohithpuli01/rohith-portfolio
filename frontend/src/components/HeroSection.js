@@ -28,7 +28,7 @@ export default function HeroSection({ data }) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
-              className="font-mono-label text-[10px] text-[#CCFF00] mb-6"
+              className="font-mono-label text-sm sm:text-base md:text-lg text-[#CCFF00] mb-6 tracking-[0.15em]"
             >
               MOTION GRAPHIC DESIGNER
             </motion.p>
