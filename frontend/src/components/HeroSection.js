@@ -24,7 +24,7 @@ export default function HeroSection({ data }) {
               className="font-mono-label text-sm sm:text-base md:text-lg text-[#4A7A12] mb-6 tracking-[0.15em]"
               data-testid="hero-title-label"
             >
-              {data.title || "MOTION GRAPHIC DESIGNER"}
+              {data.name || "ROHITH PULI"}
             </motion.p>
 
             <motion.h1
@@ -34,9 +34,12 @@ export default function HeroSection({ data }) {
               className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tighter leading-[0.9] mb-8"
               style={{ fontFamily: 'Unbounded' }}
             >
-              <span className="text-[#1A1A1A]">{data.name?.split(" ")[0] || "ROHITH"}</span>
-              <br />
-              <span className="text-[#4A7A12]">{data.name?.split(" ")[1] || "PULI"}</span>
+              {(data.title || "MOTION GRAPHIC DESIGNER").split(" ").map((word, i, arr) => (
+                <span key={i}>
+                  <span className={i === arr.length - 1 ? "text-[#4A7A12]" : "text-[#1A1A1A]"}>{word}</span>
+                  {i < arr.length - 1 && (i === Math.floor(arr.length / 2) - 1 ? <br /> : " ")}
+                </span>
+              ))}
             </motion.h1>
 
             <motion.p
@@ -105,7 +108,7 @@ export default function HeroSection({ data }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.2 }}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2"
+          className="absolute bottom-3 left-1/2 -translate-x-1/2"
         >
           <a href="#about" className="flex flex-col items-center gap-2 text-[#6B7280] hover:text-[#4A7A12] transition-colors">
             <span className="font-mono-label text-[9px]">SCROLL</span>
