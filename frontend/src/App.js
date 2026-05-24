@@ -1,52 +1,78 @@
-import { useEffect } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import "@/App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
+import { BrowserRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import Home from "@/pages/Home";
+import AdminPanel from "@/components/AdminPanel";
+import { Toaster } from "@/components/ui/sonner";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
-    }
-  };
+// REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
+function AuthCallback() {
+  const hasProcessed = useRef(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    helloWorldApi();
-  }, []);
+    if (hasProcessed.current) return;
+    hasProcessed.current = true;
+
+    const hash = window.location.hash;
+    const sessionId = new URLSearchParams(hash.substring(1)).get("session_id");
+    if (!sessionId) {
+      navigate("/");
+      return;
+    }
+
+    fetch(`${API}/auth/session`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ session_id: sessionId }),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Auth failed");
+        return res.json();
+      })
+      .then((user) => {
+        navigate("/admin", { state: { user } });
+      })
+      .catch(() => {
+        navigate("/");
+      });
+  }, [navigate]);
 
   return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
+    <div className="min-h-screen bg-[#0B0B0D] flex items-center justify-center">
+      <div className="text-[#CCFF00] font-mono-label text-sm animate-pulse">
+        AUTHENTICATING...
+      </div>
     </div>
   );
-};
+}
+
+function AppRouter() {
+  const location = useLocation();
+
+  if (location.hash?.includes("session_id=")) {
+    return <AuthCallback />;
+  }
+
+  return (
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/admin" element={<AdminPanel />} />
+    </Routes>
+  );
+}
 
 function App() {
   return (
     <div className="App">
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
+        <AppRouter />
       </BrowserRouter>
+      <Toaster position="bottom-right" />
     </div>
   );
 }
