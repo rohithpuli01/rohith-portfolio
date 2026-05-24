@@ -35,12 +35,12 @@ logger = logging.getLogger(__name__)
 # --- Rate Limiting ---
 rate_limit_store = {}  # {ip: {endpoint: [timestamps]}}
 
-def check_rate_limit(ip: str, endpoint: str, max_requests: int = 5, window_seconds: int = 60):
+def check_rate_limit(request: Request, endpoint: str, max_requests: int = 5, window_seconds: int = 60):
     now = datetime.now(timezone.utc)
+    ip = request.headers.get("X-Forwarded-For", request.client.host if request.client else "unknown").split(",")[0].strip()
     key = f"{ip}:{endpoint}"
     if key not in rate_limit_store:
         rate_limit_store[key] = []
-    # Clean old entries
     rate_limit_store[key] = [t for t in rate_limit_store[key] if (now - t).total_seconds() < window_seconds]
     if len(rate_limit_store[key]) >= max_requests:
         raise HTTPException(status_code=429, detail="Too many requests. Please try again later.")
@@ -288,8 +288,7 @@ async def delete_gallery_item(item_id: str, user=Depends(get_current_user)):
 # --- Contact Form ---
 @api_router.post("/contact")
 async def send_contact(request: Request):
-    client_ip = request.client.host if request.client else "unknown"
-    check_rate_limit(client_ip, "contact", max_requests=5, window_seconds=300)
+    check_rate_limit(request, "contact", max_requests=5, window_seconds=300)
     body = await request.json()
     name = body.get("name", "")
     email = body.get("email", "")
@@ -338,8 +337,7 @@ async def send_contact(request: Request):
 # --- Lucky Wheel Spin ---
 @api_router.post("/wheel/spin")
 async def spin_wheel(request: Request):
-    client_ip = request.client.host if request.client else "unknown"
-    check_rate_limit(client_ip, "wheel_spin", max_requests=10, window_seconds=60)
+    check_rate_limit(request, "wheel_spin", max_requests=10, window_seconds=60)
     import random
     content = await db.portfolio_content.find_one({"section": "wheel"}, {"_id": 0})
     if not content:
@@ -414,8 +412,7 @@ async def get_feedback():
 
 @api_router.post("/feedback")
 async def add_feedback(request: Request):
-    client_ip = request.client.host if request.client else "unknown"
-    check_rate_limit(client_ip, "feedback", max_requests=3, window_seconds=300)
+    check_rate_limit(request, "feedback", max_requests=3, window_seconds=300)
     body = await request.json()
     name = body.get("name", "").strip()
     rating = body.get("rating", 0)
