@@ -274,6 +274,26 @@ export default function AdminPanel() {
                     <label className={`${btnCls} cursor-pointer whitespace-nowrap`}><Upload size={14} /><input type="file" accept="image/*,video/*" className="hidden" onChange={e => handleFileUpload(e, url => { const u = [...projects]; u[i] = { ...u[i], image: url }; setProjects(u); })} /></label>
                   </div>
                   <input className={inputCls} placeholder="Tags (comma separated)" value={(proj.tags || []).join(", ")} onChange={e => { const u = [...projects]; u[i] = { ...u[i], tags: e.target.value.split(",").map(t => t.trim()).filter(Boolean) }; setProjects(u); }} />
+                  <div>
+                    <label className={labelCls}>DETAIL PAGE TEXT</label>
+                    <textarea className={`${inputCls} resize-none`} rows={3} placeholder="Detailed description shown on project page..." value={proj.detail_text || ""} onChange={e => { const u = [...projects]; u[i] = { ...u[i], detail_text: e.target.value }; setProjects(u); }} />
+                  </div>
+                  <div>
+                    <label className={labelCls}>DETAIL PAGE IMAGES (one URL per line, or upload)</label>
+                    <textarea className={`${inputCls} resize-none text-xs`} rows={3} placeholder="One image URL per line" value={(proj.detail_images || []).join("\n")} onChange={e => { const u = [...projects]; u[i] = { ...u[i], detail_images: e.target.value.split("\n").map(s => s.trim()).filter(Boolean) }; setProjects(u); }} />
+                    <label className={`${btnCls} cursor-pointer mt-2 inline-flex`}><Upload size={12} /> Add Image<input type="file" accept="image/*,video/*" className="hidden" onChange={e => handleFileUpload(e, url => { const u = [...projects]; u[i] = { ...u[i], detail_images: [...(u[i].detail_images || []), url] }; setProjects(u); })} /></label>
+                  </div>
+                  <div>
+                    <label className={labelCls}>VIDEO URL (optional)</label>
+                    <div className="flex gap-2">
+                      <input className={inputCls} placeholder="Video URL" value={proj.video_url || ""} onChange={e => { const u = [...projects]; u[i] = { ...u[i], video_url: e.target.value }; setProjects(u); }} />
+                      <label className={`${btnCls} cursor-pointer whitespace-nowrap`}><Upload size={14} /><input type="file" accept="video/*" className="hidden" onChange={e => handleFileUpload(e, url => { const u = [...projects]; u[i] = { ...u[i], video_url: url }; setProjects(u); })} /></label>
+                    </div>
+                  </div>
+                  <div>
+                    <label className={labelCls}>EXTERNAL LINK (optional)</label>
+                    <input className={inputCls} placeholder="https://..." value={proj.link || ""} onChange={e => { const u = [...projects]; u[i] = { ...u[i], link: e.target.value }; setProjects(u); }} />
+                  </div>
                   <button onClick={() => updateProject(proj.project_id, projects[i])} className="text-[#4A7A12] text-xs flex items-center gap-1"><Save size={12} /> Save Project</button>
                 </div>
               ))}

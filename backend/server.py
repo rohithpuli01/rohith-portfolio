@@ -267,13 +267,25 @@ async def get_projects():
     projects = await db.projects.find({}, {"_id": 0}).to_list(100)
     if not projects:
         return [
-            {"project_id": "p1", "title": "Brand Identity Motion", "description": "Dynamic logo animations for tech startup", "image": "https://static.prod-images.emergentagent.com/jobs/f74c8429-af4c-4f76-9bdb-65d785ad9650/images/af4ae5325f206aa077ae031385f35d8abefef2541619fff1bac263d1812f9a29.png", "tags": ["Motion", "Branding"], "link": "#", "video_url": ""},
-            {"project_id": "p2", "title": "Neon Abstract Loop", "description": "Seamless neon motion loop for event visuals", "image": "https://images.pexels.com/photos/18337643/pexels-photo-18337643.jpeg", "tags": ["VFX", "Loop"], "link": "#", "video_url": ""},
-            {"project_id": "p3", "title": "3D Typography Reel", "description": "Kinetic typography showcase with 3D elements", "image": "https://images.unsplash.com/photo-1597418895783-f7de85be2839", "tags": ["3D", "Typography"], "link": "#", "video_url": ""},
-            {"project_id": "p4", "title": "Product Visualization", "description": "Photorealistic 3D product renders and animations", "image": "https://images.unsplash.com/photo-1651611243377-2c15b94ad613", "tags": ["3D", "Product"], "link": "#", "video_url": ""},
-            {"project_id": "p5", "title": "Event Visuals Pack", "description": "Complete visual identity for music festival", "image": "https://images.pexels.com/photos/18069238/pexels-photo-18069238.png", "tags": ["Event", "Design"], "link": "#", "video_url": ""}
+            {"project_id": "p1", "title": "Brand Identity Motion", "description": "Dynamic logo animations for tech startup", "image": "https://static.prod-images.emergentagent.com/jobs/f74c8429-af4c-4f76-9bdb-65d785ad9650/images/af4ae5325f206aa077ae031385f35d8abefef2541619fff1bac263d1812f9a29.png", "tags": ["Motion", "Branding"], "link": "#", "video_url": "", "detail_text": "A comprehensive brand identity motion package created for a leading tech startup. The project involved designing dynamic logo animations, kinetic typography sequences, and branded motion templates for social media and presentations.", "detail_images": ["https://static.prod-images.emergentagent.com/jobs/f74c8429-af4c-4f76-9bdb-65d785ad9650/images/af4ae5325f206aa077ae031385f35d8abefef2541619fff1bac263d1812f9a29.png"]},
+            {"project_id": "p2", "title": "Neon Abstract Loop", "description": "Seamless neon motion loop for event visuals", "image": "https://images.pexels.com/photos/18337643/pexels-photo-18337643.jpeg", "tags": ["VFX", "Loop"], "link": "#", "video_url": "", "detail_text": "Created a mesmerizing seamless neon motion loop designed for live event visuals. The animation features flowing abstract shapes with vibrant neon color palettes, optimized for large-scale LED displays and projection mapping.", "detail_images": ["https://images.pexels.com/photos/18337643/pexels-photo-18337643.jpeg"]},
+            {"project_id": "p3", "title": "3D Typography Reel", "description": "Kinetic typography showcase with 3D elements", "image": "https://images.unsplash.com/photo-1597418895783-f7de85be2839", "tags": ["3D", "Typography"], "link": "#", "video_url": "", "detail_text": "A showcase reel featuring kinetic typography combined with 3D elements. Each sequence demonstrates different animation techniques — from extruded letterforms to particle-based text reveals.", "detail_images": ["https://images.unsplash.com/photo-1597418895783-f7de85be2839"]},
+            {"project_id": "p4", "title": "Product Visualization", "description": "Photorealistic 3D product renders and animations", "image": "https://images.unsplash.com/photo-1651611243377-2c15b94ad613", "tags": ["3D", "Product"], "link": "#", "video_url": "", "detail_text": "Photorealistic 3D product renders and turntable animations created for an e-commerce brand. The project included studio lighting setups, material creation, and smooth camera animations.", "detail_images": ["https://images.unsplash.com/photo-1651611243377-2c15b94ad613"]},
+            {"project_id": "p5", "title": "Event Visuals Pack", "description": "Complete visual identity for music festival", "image": "https://images.pexels.com/photos/18069238/pexels-photo-18069238.png", "tags": ["Event", "Design"], "link": "#", "video_url": "", "detail_text": "Complete visual identity package for a music festival including stage visuals, countdown sequences, artist intro animations, and social media motion templates.", "detail_images": ["https://images.pexels.com/photos/18069238/pexels-photo-18069238.png"]}
         ]
     return projects
+
+@api_router.get("/projects/{project_id}")
+async def get_project(project_id: str):
+    project = await db.projects.find_one({"project_id": project_id}, {"_id": 0})
+    if not project:
+        # Check defaults
+        all_projects = await get_projects()
+        for p in all_projects:
+            if p["project_id"] == project_id:
+                return p
+        raise HTTPException(status_code=404, detail="Project not found")
+    return project
 
 @api_router.post("/projects")
 async def create_project(request: Request, user=Depends(get_current_user)):

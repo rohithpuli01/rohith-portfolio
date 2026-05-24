@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import "@/App.css";
 import { BrowserRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import Home from "@/pages/Home";
+import ProjectDetail from "@/pages/ProjectDetail";
 import AdminPanel from "@/components/AdminPanel";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -43,8 +44,8 @@ function AuthCallback() {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-[#0B0B0D] flex items-center justify-center">
-      <div className="text-[#CCFF00] font-mono-label text-sm animate-pulse">
+    <div className="min-h-screen bg-[#F5F0E8] flex items-center justify-center">
+      <div className="text-[#4A7A12] font-mono-label text-sm animate-pulse">
         AUTHENTICATING...
       </div>
     </div>
@@ -61,6 +62,7 @@ function AppRouter() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
+      <Route path="/projects/:projectId" element={<ProjectDetail />} />
       <Route path="/admin" element={<AdminPanel />} />
     </Routes>
   );

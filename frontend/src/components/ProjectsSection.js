@@ -4,8 +4,10 @@ import { Autoplay, FreeMode } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/free-mode";
 import { ExternalLink } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function ProjectsSection({ projects, contentData }) {
+  const navigate = useNavigate();
   return (
     <section id="projects" className="py-24 md:py-32 overflow-hidden bg-white paper-grain" data-testid="projects-section">
       <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-24 mb-12 relative z-10">
@@ -26,7 +28,8 @@ export default function ProjectsSection({ projects, contentData }) {
         {projects.map((project, i) => (
           <SwiperSlide key={project.project_id || i} style={{ width: "auto" }}>
             <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }} className="group relative w-[300px] md:w-[400px] cursor-pointer">
+              transition={{ delay: i * 0.1 }} className="group relative w-[300px] md:w-[400px] cursor-pointer"
+              onClick={() => navigate(`/projects/${project.project_id}`)}>
               <div className="relative overflow-hidden border border-[#D4CBB8] bg-[#F5F0E8] shadow-sm">
                 {/* Film perforations */}
                 <div className="flex justify-between px-2 py-1 bg-[#EDE8DE] border-b border-[#D4CBB8]">
