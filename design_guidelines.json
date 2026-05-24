@@ -1,0 +1,112 @@
+{
+  "theme": "dark",
+  "archetype": "7-Electric-Neon-Meets-Neo-Brutalism",
+  "typography": {
+    "headings": "Unbounded",
+    "subheadings": "JetBrains Mono",
+    "body": "Manrope",
+    "rules": "H1 max text-5xl to text-6xl with tracking-tighter. Use JetBrains Mono for overlines/labels with uppercase and tracking-[0.2em]."
+  },
+  "colors": {
+    "background": "#0B0B0D",
+    "surface": "#17171C",
+    "surface_accent": "#23232C",
+    "primary": "#CCFF00",
+    "primary_hover": "#AADD00",
+    "text_main": "#FAFAFA",
+    "text_muted": "#A1A1AA",
+    "border": "#333340",
+    "rules": "Primary accent is Lime Green (#CCFF00). Use sparingly for CTAs, neon glow effects, and interactive states. Background is Deep Obsidian. No full-screen gradients."
+  },
+  "spacing_and_layout": {
+    "strategy": "Generous spacing. Asymmetric bento grids. Overlapping elements to simulate stacked paper.",
+    "container_padding": "p-8 md:p-16 lg:p-24",
+    "gap": "gap-8 md:gap-12",
+    "borders": "Use 1px borders for Neo-Brutalist structure. Implement CSS clip-path for torn 'paper model' edges on hero images and feature cards."
+  },
+  "motion_and_interactions": {
+    "hover_states": "Hard shadows with neon lime glow (e.g., hover:shadow-[4px_4px_0px_#CCFF00]). Use -translate-y-1 for lift.",
+    "animations": "Framer Motion for entrance staggering. react-fast-marquee for slow kinetic editorial ribbons."
+  },
+  "sections": [
+    {
+      "name": "Hero",
+      "design_instructions": "Oversized typography 'ROHITH PULI'. Kinetic marquee text running behind reading 'MOTION GRAPHIC DESIGNER'. Profile image should have a torn paper mask (clip-path)."
+    },
+    {
+      "name": "About Me",
+      "design_instructions": "Bento grid layout. Section for details, skills, and tools. Display tools used (After Effects, Premiere, etc.) as raw technical tags using JetBrains Mono."
+    },
+    {
+      "name": "Projects",
+      "design_instructions": "Moving frames carousel. Use Swiper or Framer Motion to create horizontal scrolling frames. Style the frames like torn paper film strips with neon green accents."
+    },
+    {
+      "name": "Gallery",
+      "design_instructions": "Full visibility masonry or dense bento grid. Showcase images and provide video placeholders. Hovering over a gallery item reveals a lime green overlay with project title."
+    },
+    {
+      "name": "Resume",
+      "design_instructions": "Cool timeline or brutalist ticket-style design. Dashed vertical lines with glowing neon lime nodes. Include downloadable resume button."
+    },
+    {
+      "name": "Lucky Wheel of Discount",
+      "design_instructions": "Gamified interaction for clients. A circular SVG/CSS wheel with conic-gradient slices (Lime green and charcoal). Central 'SPIN' button. Neon border glow."
+    },
+    {
+      "name": "Contact & Admin Auth",
+      "design_instructions": "Brutalist contact form (solid borders, square corners). Include a 'Google Login for Admin' button at the bottom or in a hidden footer route for editing access."
+    }
+  ],
+  "components_and_libraries": {
+    "icons": "lucide-react",
+    "packages_to_install": [
+      "yarn add framer-motion react-fast-marquee swiper lucide-react"
+    ],
+    "shadcn_components": ["form", "input", "button", "dialog"],
+    "rules": "Use raw HTML/Tailwind for creative structural layouts. Use Shadcn ONLY for interactive logic (Form, Input, Dialog) and customize them heavily to remove the Vercel-look."
+  },
+  "image_urls": {
+    "hero_profile": [
+      {
+        "url": "https://images.pexels.com/photos/8242769/pexels-photo-8242769.jpeg",
+        "description": "Hero section portrait of Rohith under neon lighting"
+      }
+    ],
+    "backgrounds": [
+      {
+        "url": "https://static.prod-images.emergentagent.com/jobs/f74c8429-af4c-4f76-9bdb-65d785ad9650/images/f49cc2295031c919d93c6568de25f0782c9f1e187b4c9714c8cf11162750c691.png",
+        "description": "Dark textured paper background. Use as section divider or body background texture."
+      }
+    ],
+    "projects_and_gallery": [
+      {
+        "url": "https://static.prod-images.emergentagent.com/jobs/f74c8429-af4c-4f76-9bdb-65d785ad9650/images/af4ae5325f206aa077ae031385f35d8abefef2541619fff1bac263d1812f9a29.png",
+        "description": "3D neon paper craft motion graphic"
+      },
+      {
+        "url": "https://images.pexels.com/photos/18337643/pexels-photo-18337643.jpeg",
+        "description": "Dynamic abstract neon motion graphic"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1597418895783-f7de85be2839",
+        "description": "3D motion typography"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1651611243377-2c15b94ad613",
+        "description": "3D render background pattern"
+      },
+      {
+        "url": "https://images.pexels.com/photos/18069238/pexels-photo-18069238.png",
+        "description": "3D purple letters"
+      }
+    ]
+  },
+  "instructions_to_main_agent": [
+    "DO NOT ASK ME FOR ANY CLARIFICATION. JUST BUILD.",
+    "Rely entirely on the provided image_urls. Do not use generic placeholders like via.placeholder.com. If you need a video placeholder, style an HTML5 video tag with a poster image from the gallery.",
+    "Implement the 'paper model' effect using CSS `clip-path: polygon(...)` to create slightly jagged, torn edges on cards and images.",
+    "Ensure all interactive elements and form fields have a `data-testid` attribute.",
+    "Strictly follow the color palette. Neon Lime (#CCFF00) should be highly visible against the dark #0B0B0D background."
+  ]
+}
