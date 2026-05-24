@@ -404,7 +404,10 @@ async def spin_wheel(request: Request):
     await db.spins.insert_one(spin_doc)
     return {"result": winner["label"], "index": segments.index(winner)}
 
-# --- File Upload (base64) ---
+# --- File Upload (disk-based for full quality) ---
+UPLOAD_DIR = ROOT_DIR / "uploads"
+UPLOAD_DIR.mkdir(exist_ok=True)
+
 @api_router.post("/upload")
 async def upload_file(request: Request, user=Depends(get_current_user)):
     body = await request.json()
@@ -415,22 +418,57 @@ async def upload_file(request: Request, user=Depends(get_current_user)):
     if not file_data:
         raise HTTPException(status_code=400, detail="No file data provided")
 
+    # Extract binary from base64 data URL
+    raw_b64 = file_data
+    if "base64," in raw_b64:
+        raw_b64 = raw_b64.split("base64,")[1]
+    binary = base64.b64decode(raw_b64)
+
+    # Detect extension from original filename or mime
+    ext = Path(file_name).suffix.lower() or ".bin"
+    file_id = f"f_{uuid.uuid4().hex[:12]}"
+    stored_name = f"{file_id}{ext}"
+    file_path = UPLOAD_DIR / stored_name
+
+    # Write to disk at full quality
+    with open(file_path, "wb") as f:
+        f.write(binary)
+
+    # Store metadata in DB (no binary data)
     file_doc = {
-        "file_id": f"f_{uuid.uuid4().hex[:8]}",
+        "file_id": file_id,
         "file_name": file_name,
+        "stored_name": stored_name,
         "file_type": file_type,
-        "data": file_data,
+        "extension": ext,
+        "size_bytes": len(binary),
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.uploads.insert_one(file_doc)
-    return {"file_id": file_doc["file_id"], "url": f"/api/files/{file_doc['file_id']}"}
+    return {"file_id": file_id, "url": f"/api/files/{file_id}"}
 
 @api_router.get("/files/{file_id}")
 async def get_file(file_id: str):
     doc = await db.uploads.find_one({"file_id": file_id}, {"_id": 0})
     if not doc:
         raise HTTPException(status_code=404, detail="File not found")
-    data = doc["data"]
+
+    # Check if file is on disk (new method)
+    stored_name = doc.get("stored_name")
+    if stored_name:
+        file_path = UPLOAD_DIR / stored_name
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail="File missing from storage")
+        import mimetypes
+        from starlette.responses import FileResponse
+        mime = mimetypes.guess_type(stored_name)[0] or "application/octet-stream"
+        headers = {"Cache-Control": "public, max-age=31536000"}
+        if mime == "application/pdf":
+            headers["Content-Disposition"] = f'attachment; filename="{doc.get("file_name", "file.pdf")}"'
+        return FileResponse(file_path, media_type=mime, headers=headers)
+
+    # Legacy: base64 in DB (old uploads)
+    data = doc.get("data", "")
     if "base64," in data:
         data = data.split("base64,")[1]
     import io
@@ -443,6 +481,8 @@ async def get_file(file_id: str):
         content_type = "application/pdf"
     elif "png" in doc.get("file_name", ""):
         content_type = "image/png"
+    elif "webp" in doc.get("file_name", ""):
+        content_type = "image/webp"
     headers = {}
     if content_type == "application/pdf":
         headers["Content-Disposition"] = f'attachment; filename="{doc.get("file_name", "resume.pdf")}"'
@@ -496,17 +536,28 @@ async def upload_resume(request: Request, user=Depends(get_current_user)):
     file_name = body.get("file_name", "resume.pdf")
     if not file_data:
         raise HTTPException(status_code=400, detail="No file data")
-    # Store resume
+    # Write to disk
+    raw_b64 = file_data
+    if "base64," in raw_b64:
+        raw_b64 = raw_b64.split("base64,")[1]
+    binary = base64.b64decode(raw_b64)
+    ext = Path(file_name).suffix.lower() or ".pdf"
+    stored_name = f"resume_latest{ext}"
+    file_path = UPLOAD_DIR / stored_name
+    with open(file_path, "wb") as f:
+        f.write(binary)
+    # Store metadata
     resume_doc = {
         "file_id": "resume_latest",
         "file_name": file_name,
+        "stored_name": stored_name,
         "file_type": "pdf",
-        "data": file_data,
+        "extension": ext,
+        "size_bytes": len(binary),
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.uploads.update_one({"file_id": "resume_latest"}, {"$set": resume_doc}, upsert=True)
     resume_url = f"/api/files/resume_latest"
-    # Update resume content section
     await db.portfolio_content.update_one(
         {"section": "resume"},
         {"$set": {"resume_url": resume_url}},

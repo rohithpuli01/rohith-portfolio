@@ -85,21 +85,31 @@ export default function AdminPanel() {
     navigate("/");
   };
 
+  const [uploading, setUploading] = useState(false);
+
   const handleFileUpload = (e, callback) => {
     const file = e.target.files[0];
     if (!file) return;
+    // Allow up to 200MB
+    if (file.size > 200 * 1024 * 1024) {
+      toast.error("File too large. Max 200MB.");
+      return;
+    }
+    setUploading(true);
     const reader = new FileReader();
     reader.onload = async () => {
       try {
         const res = await fetch(`${API}/upload`, {
           method: "POST", headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ file_data: reader.result, file_name: file.name, file_type: file.type.startsWith("video") ? "video" : "image" }),
+          body: JSON.stringify({ file_data: reader.result, file_name: file.name, file_type: file.type.startsWith("video") ? "video" : file.type === "application/pdf" ? "pdf" : "image" }),
         });
+        if (!res.ok) throw new Error("Upload failed");
         const json = await res.json();
         callback(`${process.env.REACT_APP_BACKEND_URL}${json.url}`);
-        toast.success("File uploaded!");
-      } catch { toast.error("Upload failed"); }
+        toast.success(`${file.name} uploaded! (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
+      } catch { toast.error("Upload failed. File may be too large."); }
+      setUploading(false);
     };
     reader.readAsDataURL(file);
   };
@@ -163,6 +173,7 @@ export default function AdminPanel() {
           <button onClick={() => navigate("/")} className="text-[#6B7280] hover:text-[#4A7A12]" data-testid="admin-back-btn"><ArrowLeft size={18} /></button>
           <span className="font-mono-label text-[10px] text-[#4A7A12]">ADMIN PANEL</span>
           {user && <span className="text-xs text-[#6B7280]">({user.email})</span>}
+          {uploading && <span className="font-mono-label text-[10px] text-[#4A7A12] animate-pulse">UPLOADING...</span>}
         </div>
         <button onClick={handleLogout} className="text-[#6B7280] hover:text-[#4A7A12] flex items-center gap-2 text-xs" data-testid="admin-logout-btn"><LogOut size={14} /> Logout</button>
       </div>
@@ -279,9 +290,9 @@ export default function AdminPanel() {
                     <textarea className={`${inputCls} resize-none`} rows={3} placeholder="Detailed description shown on project page..." value={proj.detail_text || ""} onChange={e => { const u = [...projects]; u[i] = { ...u[i], detail_text: e.target.value }; setProjects(u); }} />
                   </div>
                   <div>
-                    <label className={labelCls}>DETAIL PAGE IMAGES (one URL per line, or upload)</label>
-                    <textarea className={`${inputCls} resize-none text-xs`} rows={3} placeholder="One image URL per line" value={(proj.detail_images || []).join("\n")} onChange={e => { const u = [...projects]; u[i] = { ...u[i], detail_images: e.target.value.split("\n").map(s => s.trim()).filter(Boolean) }; setProjects(u); }} />
-                    <label className={`${btnCls} cursor-pointer mt-2 inline-flex`}><Upload size={12} /> Add Image<input type="file" accept="image/*,video/*" className="hidden" onChange={e => handleFileUpload(e, url => { const u = [...projects]; u[i] = { ...u[i], detail_images: [...(u[i].detail_images || []), url] }; setProjects(u); })} /></label>
+                    <label className={labelCls}>DETAIL PAGE IMAGES & VIDEOS (one URL per line, or upload)</label>
+                    <textarea className={`${inputCls} resize-none text-xs`} rows={3} placeholder="One image/video URL per line" value={(proj.detail_images || []).join("\n")} onChange={e => { const u = [...projects]; u[i] = { ...u[i], detail_images: e.target.value.split("\n").map(s => s.trim()).filter(Boolean) }; setProjects(u); }} />
+                    <label className={`${btnCls} cursor-pointer mt-2 inline-flex`}><Upload size={12} /> Add Image/Video<input type="file" accept="image/*,video/*" className="hidden" onChange={e => handleFileUpload(e, url => { const u = [...projects]; u[i] = { ...u[i], detail_images: [...(u[i].detail_images || []), url] }; setProjects(u); })} /></label>
                   </div>
                   <div>
                     <label className={labelCls}>VIDEO URL (optional)</label>
