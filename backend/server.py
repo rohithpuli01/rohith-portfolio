@@ -262,28 +262,28 @@ def get_default_content(section):
     return defaults.get(section, {"section": section})
 
 # --- Projects CRUD ---
+DEFAULT_PROJECTS = [
+    {"project_id": "p1", "title": "Brand Identity Motion", "description": "Dynamic logo animations for tech startup", "image": "https://static.prod-images.emergentagent.com/jobs/f74c8429-af4c-4f76-9bdb-65d785ad9650/images/af4ae5325f206aa077ae031385f35d8abefef2541619fff1bac263d1812f9a29.png", "tags": ["Motion", "Branding"], "link": "#", "video_url": "", "detail_text": "A comprehensive brand identity motion package created for a leading tech startup. The project involved designing dynamic logo animations, kinetic typography sequences, and branded motion templates for social media and presentations.", "detail_images": ["https://static.prod-images.emergentagent.com/jobs/f74c8429-af4c-4f76-9bdb-65d785ad9650/images/af4ae5325f206aa077ae031385f35d8abefef2541619fff1bac263d1812f9a29.png"]},
+    {"project_id": "p2", "title": "Neon Abstract Loop", "description": "Seamless neon motion loop for event visuals", "image": "https://images.pexels.com/photos/18337643/pexels-photo-18337643.jpeg", "tags": ["VFX", "Loop"], "link": "#", "video_url": "", "detail_text": "Created a mesmerizing seamless neon motion loop designed for live event visuals. The animation features flowing abstract shapes with vibrant neon color palettes, optimized for large-scale LED displays and projection mapping.", "detail_images": ["https://images.pexels.com/photos/18337643/pexels-photo-18337643.jpeg"]},
+    {"project_id": "p3", "title": "3D Typography Reel", "description": "Kinetic typography showcase with 3D elements", "image": "https://images.unsplash.com/photo-1597418895783-f7de85be2839", "tags": ["3D", "Typography"], "link": "#", "video_url": "", "detail_text": "A showcase reel featuring kinetic typography combined with 3D elements. Each sequence demonstrates different animation techniques — from extruded letterforms to particle-based text reveals.", "detail_images": ["https://images.unsplash.com/photo-1597418895783-f7de85be2839"]},
+    {"project_id": "p4", "title": "Product Visualization", "description": "Photorealistic 3D product renders and animations", "image": "https://images.unsplash.com/photo-1651611243377-2c15b94ad613", "tags": ["3D", "Product"], "link": "#", "video_url": "", "detail_text": "Photorealistic 3D product renders and turntable animations created for an e-commerce brand. The project included studio lighting setups, material creation, and smooth camera animations.", "detail_images": ["https://images.unsplash.com/photo-1651611243377-2c15b94ad613"]},
+    {"project_id": "p5", "title": "Event Visuals Pack", "description": "Complete visual identity for music festival", "image": "https://images.pexels.com/photos/18069238/pexels-photo-18069238.png", "tags": ["Event", "Design"], "link": "#", "video_url": "", "detail_text": "Complete visual identity package for a music festival including stage visuals, countdown sequences, artist intro animations, and social media motion templates.", "detail_images": ["https://images.pexels.com/photos/18069238/pexels-photo-18069238.png"]}
+]
+
 @api_router.get("/projects")
 async def get_projects():
     projects = await db.projects.find({}, {"_id": 0}).to_list(100)
     if not projects:
-        return [
-            {"project_id": "p1", "title": "Brand Identity Motion", "description": "Dynamic logo animations for tech startup", "image": "https://static.prod-images.emergentagent.com/jobs/f74c8429-af4c-4f76-9bdb-65d785ad9650/images/af4ae5325f206aa077ae031385f35d8abefef2541619fff1bac263d1812f9a29.png", "tags": ["Motion", "Branding"], "link": "#", "video_url": "", "detail_text": "A comprehensive brand identity motion package created for a leading tech startup. The project involved designing dynamic logo animations, kinetic typography sequences, and branded motion templates for social media and presentations.", "detail_images": ["https://static.prod-images.emergentagent.com/jobs/f74c8429-af4c-4f76-9bdb-65d785ad9650/images/af4ae5325f206aa077ae031385f35d8abefef2541619fff1bac263d1812f9a29.png"]},
-            {"project_id": "p2", "title": "Neon Abstract Loop", "description": "Seamless neon motion loop for event visuals", "image": "https://images.pexels.com/photos/18337643/pexels-photo-18337643.jpeg", "tags": ["VFX", "Loop"], "link": "#", "video_url": "", "detail_text": "Created a mesmerizing seamless neon motion loop designed for live event visuals. The animation features flowing abstract shapes with vibrant neon color palettes, optimized for large-scale LED displays and projection mapping.", "detail_images": ["https://images.pexels.com/photos/18337643/pexels-photo-18337643.jpeg"]},
-            {"project_id": "p3", "title": "3D Typography Reel", "description": "Kinetic typography showcase with 3D elements", "image": "https://images.unsplash.com/photo-1597418895783-f7de85be2839", "tags": ["3D", "Typography"], "link": "#", "video_url": "", "detail_text": "A showcase reel featuring kinetic typography combined with 3D elements. Each sequence demonstrates different animation techniques — from extruded letterforms to particle-based text reveals.", "detail_images": ["https://images.unsplash.com/photo-1597418895783-f7de85be2839"]},
-            {"project_id": "p4", "title": "Product Visualization", "description": "Photorealistic 3D product renders and animations", "image": "https://images.unsplash.com/photo-1651611243377-2c15b94ad613", "tags": ["3D", "Product"], "link": "#", "video_url": "", "detail_text": "Photorealistic 3D product renders and turntable animations created for an e-commerce brand. The project included studio lighting setups, material creation, and smooth camera animations.", "detail_images": ["https://images.unsplash.com/photo-1651611243377-2c15b94ad613"]},
-            {"project_id": "p5", "title": "Event Visuals Pack", "description": "Complete visual identity for music festival", "image": "https://images.pexels.com/photos/18069238/pexels-photo-18069238.png", "tags": ["Event", "Design"], "link": "#", "video_url": "", "detail_text": "Complete visual identity package for a music festival including stage visuals, countdown sequences, artist intro animations, and social media motion templates.", "detail_images": ["https://images.pexels.com/photos/18069238/pexels-photo-18069238.png"]}
-        ]
+        # Seed defaults into DB so they become editable
+        for p in DEFAULT_PROJECTS:
+            await db.projects.update_one({"project_id": p["project_id"]}, {"$set": p}, upsert=True)
+        projects = await db.projects.find({}, {"_id": 0}).to_list(100)
     return projects
 
 @api_router.get("/projects/{project_id}")
 async def get_project(project_id: str):
     project = await db.projects.find_one({"project_id": project_id}, {"_id": 0})
     if not project:
-        # Check defaults
-        all_projects = await get_projects()
-        for p in all_projects:
-            if p["project_id"] == project_id:
-                return p
         raise HTTPException(status_code=404, detail="Project not found")
     return project
 
@@ -298,8 +298,9 @@ async def create_project(request: Request, user=Depends(get_current_user)):
 @api_router.put("/projects/{project_id}")
 async def update_project(project_id: str, request: Request, user=Depends(get_current_user)):
     body = await request.json()
+    body["project_id"] = project_id
     body["updated_at"] = datetime.now(timezone.utc).isoformat()
-    await db.projects.update_one({"project_id": project_id}, {"$set": body})
+    await db.projects.update_one({"project_id": project_id}, {"$set": body}, upsert=True)
     return {"status": "updated"}
 
 @api_router.delete("/projects/{project_id}")
@@ -308,18 +309,22 @@ async def delete_project(project_id: str, user=Depends(get_current_user)):
     return {"status": "deleted"}
 
 # --- Gallery CRUD ---
+DEFAULT_GALLERY = [
+    {"item_id": "g1", "title": "Neon Dreams", "type": "image", "url": "https://static.prod-images.emergentagent.com/jobs/f74c8429-af4c-4f76-9bdb-65d785ad9650/images/af4ae5325f206aa077ae031385f35d8abefef2541619fff1bac263d1812f9a29.png", "thumbnail": ""},
+    {"item_id": "g2", "title": "Abstract Flow", "type": "image", "url": "https://images.pexels.com/photos/18337643/pexels-photo-18337643.jpeg", "thumbnail": ""},
+    {"item_id": "g3", "title": "Motion Typography", "type": "image", "url": "https://images.unsplash.com/photo-1597418895783-f7de85be2839", "thumbnail": ""},
+    {"item_id": "g4", "title": "3D Render", "type": "image", "url": "https://images.unsplash.com/photo-1651611243377-2c15b94ad613", "thumbnail": ""},
+    {"item_id": "g5", "title": "Geometric Neon", "type": "image", "url": "https://images.pexels.com/photos/18069238/pexels-photo-18069238.png", "thumbnail": ""},
+    {"item_id": "g6", "title": "Paper Texture", "type": "image", "url": "https://static.prod-images.emergentagent.com/jobs/f74c8429-af4c-4f76-9bdb-65d785ad9650/images/f49cc2295031c919d93c6568de25f0782c9f1e187b4c9714c8cf11162750c691.png", "thumbnail": ""}
+]
+
 @api_router.get("/gallery")
 async def get_gallery():
     items = await db.gallery.find({}, {"_id": 0}).to_list(100)
     if not items:
-        return [
-            {"item_id": "g1", "title": "Neon Dreams", "type": "image", "url": "https://static.prod-images.emergentagent.com/jobs/f74c8429-af4c-4f76-9bdb-65d785ad9650/images/af4ae5325f206aa077ae031385f35d8abefef2541619fff1bac263d1812f9a29.png", "thumbnail": ""},
-            {"item_id": "g2", "title": "Abstract Flow", "type": "image", "url": "https://images.pexels.com/photos/18337643/pexels-photo-18337643.jpeg", "thumbnail": ""},
-            {"item_id": "g3", "title": "Motion Typography", "type": "image", "url": "https://images.unsplash.com/photo-1597418895783-f7de85be2839", "thumbnail": ""},
-            {"item_id": "g4", "title": "3D Render", "type": "image", "url": "https://images.unsplash.com/photo-1651611243377-2c15b94ad613", "thumbnail": ""},
-            {"item_id": "g5", "title": "Geometric Neon", "type": "image", "url": "https://images.pexels.com/photos/18069238/pexels-photo-18069238.png", "thumbnail": ""},
-            {"item_id": "g6", "title": "Paper Texture", "type": "image", "url": "https://static.prod-images.emergentagent.com/jobs/f74c8429-af4c-4f76-9bdb-65d785ad9650/images/f49cc2295031c919d93c6568de25f0782c9f1e187b4c9714c8cf11162750c691.png", "thumbnail": ""}
-        ]
+        for g in DEFAULT_GALLERY:
+            await db.gallery.update_one({"item_id": g["item_id"]}, {"$set": g}, upsert=True)
+        items = await db.gallery.find({}, {"_id": 0}).to_list(100)
     return items
 
 @api_router.post("/gallery")
