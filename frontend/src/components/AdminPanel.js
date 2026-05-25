@@ -6,7 +6,7 @@ import {
   User, Briefcase, Image, FileText, Phone, Gift, Star, MessageSquare, Layout, Lock
 } from "lucide-react";
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL;
 
 const tabs = [
   { id: "hero", label: "Hero", icon: User },
