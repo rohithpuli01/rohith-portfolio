@@ -10,7 +10,7 @@ import ContactSection from "@/components/ContactSection";
 import FeedbackSection from "@/components/FeedbackSection";
 import Footer from "@/components/Footer";
 
-const API = process.env.REACT_APP_BACKEND_URL;
+const API = {process.env.REACT_APP_BACKEND_URL};
 
 export default function Home() {
   const [heroData, setHeroData] = useState(null);
