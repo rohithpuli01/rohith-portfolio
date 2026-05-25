@@ -4,7 +4,7 @@ import { Send, MapPin, Mail, Phone } from "lucide-react";
 import { toast } from "sonner";
 
 export default function ContactSection({ data }) {
-  const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+  const API = process.env.REACT_APP_BACKEND_URL;
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [sending, setSending] = useState(false);
 
