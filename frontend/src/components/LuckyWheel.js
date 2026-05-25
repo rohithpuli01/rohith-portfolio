@@ -11,7 +11,7 @@ export default function LuckyWheel({ data }) {
   const [claimName, setClaimName] = useState("");
   const [claimed, setClaimed] = useState(false);
   const wheelRef = useRef(null);
-  const API = process.env.REACT_APP_BACKEND_URL;
+  const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
   const segments = data?.segments || [];
   const numSegments = segments.length;
