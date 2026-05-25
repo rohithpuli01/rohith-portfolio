@@ -31,6 +31,7 @@ export default function AdminPanel() {
   const [projects, setProjects] = useState([]);
   const [gallery, setGallery] = useState([]);
   const [feedbacks, setFeedbacks] = useState([]);
+  const [spins, setSpins] = useState([]);
   // Login form state
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
@@ -119,14 +120,16 @@ export default function AdminPanel() {
         const d = {};
         sections.forEach((s, i) => { d[s] = results[i]; });
         setData(d);
-        const [proj, gal, fb] = await Promise.all([
+        const [proj, gal, fb, sp] = await Promise.all([
           fetch(`${API}/projects`, { credentials: "include" }).then(r => r.json()),
           fetch(`${API}/gallery`, { credentials: "include" }).then(r => r.json()),
           fetch(`${API}/feedback`, { credentials: "include" }).then(r => r.json()),
+          fetch(`${API}/wheel/spins`, { credentials: "include" }).then(r => r.json()),
         ]);
         setProjects(proj);
         setGallery(gal);
         setFeedbacks(fb);
+        setSpins(sp);
       } catch (e) { console.error(e); }
     };
     fetchAll();
@@ -556,6 +559,37 @@ export default function AdminPanel() {
                 <button onClick={() => updateData("wheel", "segments", [...(w.segments || []), { label: "NEW", color: "#4A7A12" }])} className="text-[#4A7A12] text-xs flex items-center gap-1"><Plus size={12} /> Add Segment</button>
               </div>
               <button onClick={() => saveContent("wheel")} className={btnCls} data-testid="admin-wheel-save"><Save size={14} /> SAVE WHEEL</button>
+
+              {/* Spin History */}
+              <div className="border-t border-[#D4CBB8] pt-6 mt-6">
+                <h4 className="font-mono-label text-[10px] text-[#4A7A12] mb-4">SPIN HISTORY ({spins.length} total spins)</h4>
+                {spins.length === 0 ? (
+                  <p className="text-xs text-[#6B7280]">No spins yet</p>
+                ) : (
+                  <div className="bg-white border border-[#D4CBB8] overflow-hidden">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="bg-[#F5F0E8] border-b border-[#D4CBB8]">
+                          <th className="text-left p-3 font-mono-label text-[9px] text-[#6B7280]">NAME</th>
+                          <th className="text-left p-3 font-mono-label text-[9px] text-[#6B7280]">RESULT</th>
+                          <th className="text-left p-3 font-mono-label text-[9px] text-[#6B7280]">STATUS</th>
+                          <th className="text-left p-3 font-mono-label text-[9px] text-[#6B7280]">DATE</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {spins.map((spin, i) => (
+                          <tr key={spin.spin_id || i} className="border-b border-[#D4CBB8] last:border-0">
+                            <td className="p-3 text-[#1A1A1A]">{spin.name || <span className="text-[#6B7280] italic">Anonymous</span>}</td>
+                            <td className="p-3 font-mono-label text-[10px] text-[#4A7A12] font-semibold">{spin.result}</td>
+                            <td className="p-3">{spin.claimed ? <span className="text-[#4A7A12] font-mono-label text-[9px]">CLAIMED</span> : <span className="text-[#6B7280] font-mono-label text-[9px]">UNCLAIMED</span>}</td>
+                            <td className="p-3 text-[#6B7280]">{spin.created_at ? new Date(spin.created_at).toLocaleDateString() : "-"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 

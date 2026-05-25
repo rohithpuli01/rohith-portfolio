@@ -520,13 +520,34 @@ async def spin_wheel(request: Request):
     if not segments:
         raise HTTPException(status_code=400, detail="No wheel segments configured")
     winner = random.choice(segments)
+    spin_id = f"s_{uuid.uuid4().hex[:8]}"
     spin_doc = {
-        "spin_id": f"s_{uuid.uuid4().hex[:8]}",
+        "spin_id": spin_id,
         "result": winner["label"],
+        "name": "",
+        "claimed": False,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.spins.insert_one(spin_doc)
-    return {"result": winner["label"], "index": segments.index(winner)}
+    return {"result": winner["label"], "index": segments.index(winner), "spin_id": spin_id}
+
+@api_router.post("/wheel/claim")
+async def claim_spin(request: Request):
+    body = await request.json()
+    spin_id = body.get("spin_id", "")
+    name = body.get("name", "").strip()
+    if not spin_id or not name:
+        raise HTTPException(status_code=400, detail="spin_id and name required")
+    await db.spins.update_one(
+        {"spin_id": spin_id},
+        {"$set": {"name": name, "claimed": True}}
+    )
+    return {"status": "claimed"}
+
+@api_router.get("/wheel/spins")
+async def get_spins(user=Depends(get_current_user)):
+    spins = await db.spins.find({}, {"_id": 0}).sort("created_at", -1).to_list(200)
+    return spins
 
 # --- File Upload (disk-based for full quality) ---
 UPLOAD_DIR = ROOT_DIR / "uploads"

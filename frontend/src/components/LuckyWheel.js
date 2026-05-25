@@ -1,11 +1,15 @@
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { Gift, RotateCcw } from "lucide-react";
+import { Gift, RotateCcw, Send, Check } from "lucide-react";
+import { toast } from "sonner";
 
 export default function LuckyWheel({ data }) {
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState(null);
+  const [spinId, setSpinId] = useState(null);
   const [rotation, setRotation] = useState(0);
+  const [claimName, setClaimName] = useState("");
+  const [claimed, setClaimed] = useState(false);
   const wheelRef = useRef(null);
   const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -17,15 +21,32 @@ export default function LuckyWheel({ data }) {
     if (spinning) return;
     setSpinning(true);
     setResult(null);
+    setSpinId(null);
+    setClaimed(false);
+    setClaimName("");
     try {
       const res = await fetch(`${API}/wheel/spin`, { method: "POST" });
+      if (res.status === 429) { toast.error("Too many spins. Try again later."); setSpinning(false); return; }
       const json = await res.json();
       const winIndex = json.index;
       const targetAngle = 360 - (winIndex * segmentAngle + segmentAngle / 2);
       const newRotation = rotation + 1440 + targetAngle;
       setRotation(newRotation);
-      setTimeout(() => { setResult(json.result); setSpinning(false); }, 4000);
+      setTimeout(() => { setResult(json.result); setSpinId(json.spin_id); setSpinning(false); }, 4000);
     } catch (e) { console.error(e); setSpinning(false); }
+  };
+
+  const handleClaim = async () => {
+    if (!claimName.trim() || !spinId) return;
+    try {
+      await fetch(`${API}/wheel/claim`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ spin_id: spinId, name: claimName.trim() }),
+      });
+      setClaimed(true);
+      toast.success("Discount claimed! We'll be in touch.");
+    } catch { toast.error("Failed to claim"); }
   };
 
   const createWheelSegments = () => {
@@ -45,7 +66,6 @@ export default function LuckyWheel({ data }) {
       const textX = 200 + 120 * Math.cos(midRad);
       const textY = 200 + 120 * Math.sin(midRad);
       const isDark = seg.color === "#4A7A12" || seg.color === "#23232C" || seg.color.toLowerCase() === "#000000";
-
       return (
         <g key={i}>
           <path d={path} fill={seg.color} stroke="#D4CBB8" strokeWidth="1.5" />
@@ -78,7 +98,6 @@ export default function LuckyWheel({ data }) {
         <div className="flex flex-col items-center">
           <div className="relative w-[320px] h-[320px] md:w-[400px] md:h-[400px]">
             <div className="absolute inset-0 rounded-full shadow-lg" />
-            {/* Pointer */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 z-20">
               <div className="w-0 h-0 border-l-[12px] border-r-[12px] border-t-[24px] border-l-transparent border-r-transparent border-t-[#4A7A12]" style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.2))" }} />
             </div>
@@ -105,11 +124,43 @@ export default function LuckyWheel({ data }) {
 
           {result && (
             <motion.div initial={{ opacity: 0, scale: 0.8, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
-              className="mt-10 bg-white border-2 border-[#4A7A12] p-8 text-center shadow-lg" data-testid="wheel-result">
+              className="mt-10 bg-white border-2 border-[#4A7A12] p-8 text-center shadow-lg w-full max-w-sm" data-testid="wheel-result">
               <Gift size={32} className="text-[#4A7A12] mx-auto mb-3" />
               <p className="font-mono-label text-[10px] text-[#6B7280] mb-2">CONGRATULATIONS! YOU WON</p>
-              <p className="text-3xl font-bold text-[#4A7A12]" style={{ fontFamily: 'Unbounded' }}>{result}</p>
-              <p className="text-xs text-[#6B7280] mt-3">Contact me to redeem your discount!</p>
+              <p className="text-3xl font-bold text-[#4A7A12] mb-4" style={{ fontFamily: 'Unbounded' }}>{result}</p>
+
+              {!claimed ? (
+                <div className="border-t border-[#D4CBB8] pt-4 mt-4">
+                  <p className="text-xs text-[#6B7280] mb-3">Enter your name to claim this discount!</p>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={claimName}
+                      onChange={(e) => setClaimName(e.target.value)}
+                      placeholder="Your name"
+                      className="flex-1 bg-[#F5F0E8] border border-[#D4CBB8] text-[#1A1A1A] px-3 py-2 text-sm focus:border-[#4A7A12] focus:outline-none"
+                      data-testid="wheel-claim-name"
+                      onKeyDown={(e) => e.key === "Enter" && handleClaim()}
+                    />
+                    <button
+                      onClick={handleClaim}
+                      disabled={!claimName.trim()}
+                      className="bg-[#4A7A12] text-white font-mono-label text-[10px] px-4 py-2 hover:bg-[#3D6B0F] disabled:opacity-50 transition-colors flex items-center gap-1"
+                      data-testid="wheel-claim-btn"
+                    >
+                      <Send size={12} /> CLAIM
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="border-t border-[#D4CBB8] pt-4 mt-4">
+                  <div className="flex items-center justify-center gap-2 text-[#4A7A12]">
+                    <Check size={16} />
+                    <span className="font-mono-label text-[10px]">CLAIMED BY {claimName.toUpperCase()}</span>
+                  </div>
+                  <p className="text-xs text-[#6B7280] mt-2">Contact me to redeem your discount!</p>
+                </div>
+              )}
             </motion.div>
           )}
         </div>
