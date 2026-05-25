@@ -335,6 +335,14 @@ async def add_gallery_item(request: Request, user=Depends(get_current_user)):
     await db.gallery.insert_one(body)
     return {"status": "created", "item_id": body["item_id"]}
 
+@api_router.put("/gallery/{item_id}")
+async def update_gallery_item(item_id: str, request: Request, user=Depends(get_current_user)):
+    body = await request.json()
+    body["item_id"] = item_id
+    body["updated_at"] = datetime.now(timezone.utc).isoformat()
+    await db.gallery.update_one({"item_id": item_id}, {"$set": body}, upsert=True)
+    return {"status": "updated"}
+
 @api_router.delete("/gallery/{item_id}")
 async def delete_gallery_item(item_id: str, user=Depends(get_current_user)):
     await db.gallery.delete_one({"item_id": item_id})

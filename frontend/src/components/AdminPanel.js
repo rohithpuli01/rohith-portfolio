@@ -342,6 +342,12 @@ export default function AdminPanel() {
                         <input className={`${inputCls} text-xs`} placeholder="URL" value={item.url || ""} onChange={e => { const u = [...gallery]; u[i] = { ...u[i], url: e.target.value }; setGallery(u); }} />
                         <label className="bg-[#4A7A12] text-white px-2 py-1 text-xs cursor-pointer flex items-center"><Upload size={12} /><input type="file" accept="image/*,video/*" className="hidden" onChange={e => handleFileUpload(e, url => { const u = [...gallery]; u[i] = { ...u[i], url }; setGallery(u); })} /></label>
                       </div>
+                      <button onClick={async () => {
+                        try {
+                          await fetch(`${API}/gallery/${item.item_id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify(gallery[i]) });
+                          toast.success("Gallery item saved!");
+                        } catch { toast.error("Failed to save"); }
+                      }} className="text-[#4A7A12] text-xs flex items-center gap-1 pt-1"><Save size={12} /> Save</button>
                     </div>
                   </div>
                 ))}
