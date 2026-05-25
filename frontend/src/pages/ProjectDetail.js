@@ -187,27 +187,25 @@ export default function ProjectDetail() {
             transition={{ duration: 0.6, delay: 0.3 }}
           >
             <span className="font-mono-label text-[10px] text-[#4A7A12] mb-6 block">PROJECT GALLERY</span>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4" data-testid="project-detail-gallery">
+            <div className="columns-1 sm:columns-2 gap-4 space-y-4" data-testid="project-detail-gallery">
               {detailImages.map((img, i) => {
                 const isVideo = img.match(/\.(mp4|mov|avi|webm|mkv)$/i) || img.includes("file_type=video");
                 return (
                   <div
                     key={i}
-                    className="relative overflow-hidden border border-[#D4CBB8] bg-white shadow-sm cursor-pointer group"
+                    className="relative overflow-hidden border border-[#D4CBB8] bg-white shadow-sm cursor-pointer group break-inside-avoid"
                     onClick={() => !isVideo && setLightboxImg(img)}
                     data-testid={`project-gallery-img-${i}`}
                   >
-                    <div className="overflow-hidden">
-                      {isVideo ? (
-                        <video src={img} controls className="w-full h-auto block" />
-                      ) : (
-                        <img
-                          src={img}
-                          alt={`${project.title} - ${i + 1}`}
-                          className="w-full h-auto block transition-transform duration-500 group-hover:scale-[1.02]"
-                        />
-                      )}
-                    </div>
+                    {isVideo ? (
+                      <video src={img} controls className="w-full h-auto block" />
+                    ) : (
+                      <img
+                        src={img}
+                        alt={`${project.title} - ${i + 1}`}
+                        className="w-full h-auto block transition-transform duration-500 group-hover:scale-[1.02]"
+                      />
+                    )}
                     {!isVideo && <div className="absolute inset-0 bg-[#4A7A12]/0 group-hover:bg-[#4A7A12]/10 transition-colors duration-300" />}
                   </div>
                 );
