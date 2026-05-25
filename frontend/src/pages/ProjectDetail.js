@@ -47,6 +47,12 @@ export default function ProjectDetail() {
   const detailImages = project.detail_images || [project.image];
   const hasVideo = project.video_url;
 
+  // Combine all media: detail images + video_url if present
+  const allMedia = [...detailImages];
+  if (hasVideo && !allMedia.includes(hasVideo)) {
+    allMedia.push(hasVideo);
+  }
+
   return (
     <div className="min-h-screen bg-[#F5F0E8] paper-texture" data-testid="project-detail-page">
       {/* Top bar */}
@@ -156,19 +162,6 @@ export default function ProjectDetail() {
               </a>
             )}
 
-            {/* Video */}
-            {hasVideo && (
-              <div className="bg-white border border-[#D4CBB8] p-4 shadow-sm">
-                <span className="font-mono-label text-[9px] text-[#6B7280] block mb-3">PROJECT VIDEO</span>
-                <video
-                  src={project.video_url}
-                  controls
-                  className="w-full h-auto block border border-[#D4CBB8]"
-                  data-testid="project-detail-video"
-                />
-              </div>
-            )}
-
             {/* Back button */}
             <button
               onClick={() => navigate("/")}
@@ -180,7 +173,7 @@ export default function ProjectDetail() {
         </div>
 
         {/* Project Gallery */}
-        {detailImages.length > 0 && (
+        {allMedia.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -188,25 +181,37 @@ export default function ProjectDetail() {
           >
             <span className="font-mono-label text-[10px] text-[#4A7A12] mb-6 block">PROJECT GALLERY</span>
             <div className="columns-1 sm:columns-2 gap-4 space-y-4" data-testid="project-detail-gallery">
-              {detailImages.map((img, i) => {
-                const isVideo = img.match(/\.(mp4|mov|avi|webm|mkv)$/i) || img.includes("file_type=video");
+              {allMedia.map((url, i) => {
+                const isVideo = /\.(mp4|mov|avi|webm|mkv|mpeg)$/i.test(url) || (url === project.video_url && project.video_url);
                 return (
                   <div
                     key={i}
-                    className="relative overflow-hidden border border-[#D4CBB8] bg-white shadow-sm cursor-pointer group break-inside-avoid"
-                    onClick={() => !isVideo && setLightboxImg(img)}
+                    className="relative overflow-hidden border border-[#D4CBB8] bg-white shadow-sm break-inside-avoid group"
                     data-testid={`project-gallery-img-${i}`}
                   >
                     {isVideo ? (
-                      <video src={img} controls className="w-full h-auto block" />
+                      <div className="relative group/vid">
+                        <video
+                          src={url}
+                          muted
+                          loop
+                          playsInline
+                          controls
+                          onMouseEnter={(e) => e.target.play()}
+                          onMouseLeave={(e) => { e.target.pause(); }}
+                          className="w-full h-auto block"
+                        />
+                      </div>
                     ) : (
-                      <img
-                        src={img}
-                        alt={`${project.title} - ${i + 1}`}
-                        className="w-full h-auto block transition-transform duration-500 group-hover:scale-[1.02]"
-                      />
+                      <div className="cursor-pointer" onClick={() => setLightboxImg(url)}>
+                        <img
+                          src={url}
+                          alt={`${project.title} - ${i + 1}`}
+                          className="w-full h-auto block transition-transform duration-500 group-hover:scale-[1.02]"
+                        />
+                        <div className="absolute inset-0 bg-[#4A7A12]/0 group-hover:bg-[#4A7A12]/10 transition-colors duration-300" />
+                      </div>
                     )}
-                    {!isVideo && <div className="absolute inset-0 bg-[#4A7A12]/0 group-hover:bg-[#4A7A12]/10 transition-colors duration-300" />}
                   </div>
                 );
               })}
