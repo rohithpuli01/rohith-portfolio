@@ -4,7 +4,7 @@ import { ArrowDown } from "lucide-react";
 
 export default function HeroSection({ data }) {
   return (
-    <section id="hero" className="relative min-h-screen flex flex-col justify-center overflow-hidden paper-texture paper-grain" data-testid="hero-section">
+    <section id="hero" className="relative min-h-screen flex flex-col justify-center overflow-hidden paper-texture" data-testid="hero-section">
       {/* Marquee behind */}
       <div className="absolute top-1/2 -translate-y-1/2 w-full opacity-[0.04] pointer-events-none">
         <Marquee speed={40} gradient={false}>
@@ -81,16 +81,17 @@ export default function HeroSection({ data }) {
             className="relative hidden lg:block"
           >
             <div className="relative w-full aspect-[3/4] max-w-md mx-auto">
-              {/* Paper shadow layers */}
-              <div className="absolute -inset-3 bg-white/60 rotate-2 shadow-md" />
-              <div className="absolute -inset-1 bg-white/80 -rotate-1 shadow-sm" />
-              <div className="torn-edge overflow-hidden w-full h-full bg-white shadow-lg relative">
-                {/* Tape on top */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1 w-16 h-5 bg-[#CCFF00]/60 rotate-[-2deg] z-10" />
+              {/* Clean paper frame - no semi-transparent overlays */}
+              <div className="absolute -inset-3 bg-[#EDE8DE] rotate-2 shadow-md border border-[#D4CBB8]" />
+              <div className="absolute -inset-1 bg-white -rotate-1 shadow-sm border border-[#D4CBB8]" />
+              <div className="overflow-hidden w-full h-full bg-white shadow-lg relative border border-[#D4CBB8]">
+                {/* Tape on top - outside image area */}
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-16 h-5 bg-[#CCFF00]/50 rotate-[-2deg] z-10" />
                 <img
                   src={data.profile_image || "https://images.pexels.com/photos/8242769/pexels-photo-8242769.jpeg"}
                   alt="Rohith Puli"
                   className="w-full h-full object-cover"
+                  style={{ imageRendering: "auto" }}
                   data-testid="hero-profile-image"
                 />
               </div>
