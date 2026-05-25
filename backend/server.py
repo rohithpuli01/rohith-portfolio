@@ -46,29 +46,55 @@ def check_rate_limit(request: Request, endpoint: str, max_requests: int = 5, win
         raise HTTPException(status_code=429, detail="Too many requests. Please try again later.")
     rate_limit_store[key].append(now)
 
+# --- Admin Config ---
+ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'admin@example.com').lower()
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
+JWT_SECRET = os.environ.get('JWT_SECRET', 'fallback_secret_key_change_me')
+
+import bcrypt
+import jwt as pyjwt
+
+def hash_password(password: str) -> str:
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+
+def verify_password(plain: str, hashed: str) -> bool:
+    return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
+
 # --- Auth Helpers ---
 async def get_current_user(request: Request):
+    # Check session_token (Google OAuth sessions)
     session_token = request.cookies.get("session_token")
     if not session_token:
         auth_header = request.headers.get("Authorization")
         if auth_header and auth_header.startswith("Bearer "):
             session_token = auth_header.split(" ")[1]
-    if not session_token:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    session_doc = await db.user_sessions.find_one({"session_token": session_token}, {"_id": 0})
-    if not session_doc:
-        raise HTTPException(status_code=401, detail="Invalid session")
-    expires_at = session_doc["expires_at"]
-    if isinstance(expires_at, str):
-        expires_at = datetime.fromisoformat(expires_at)
-    if expires_at.tzinfo is None:
-        expires_at = expires_at.replace(tzinfo=timezone.utc)
-    if expires_at < datetime.now(timezone.utc):
-        raise HTTPException(status_code=401, detail="Session expired")
-    user_doc = await db.users.find_one({"user_id": session_doc["user_id"]}, {"_id": 0})
-    if not user_doc:
-        raise HTTPException(status_code=401, detail="User not found")
-    return user_doc
+    if session_token:
+        session_doc = await db.user_sessions.find_one({"session_token": session_token}, {"_id": 0})
+        if session_doc:
+            expires_at = session_doc["expires_at"]
+            if isinstance(expires_at, str):
+                expires_at = datetime.fromisoformat(expires_at)
+            if expires_at.tzinfo is None:
+                expires_at = expires_at.replace(tzinfo=timezone.utc)
+            if expires_at >= datetime.now(timezone.utc):
+                user_doc = await db.users.find_one({"user_id": session_doc["user_id"]}, {"_id": 0})
+                if user_doc:
+                    user_doc.pop("password_hash", None)
+                    return user_doc
+
+    # Check JWT access_token cookie
+    access_token = request.cookies.get("access_token")
+    if access_token:
+        try:
+            payload = pyjwt.decode(access_token, JWT_SECRET, algorithms=["HS256"])
+            user_doc = await db.users.find_one({"user_id": payload["sub"]}, {"_id": 0})
+            if user_doc:
+                user_doc.pop("password_hash", None)
+                return user_doc
+        except (pyjwt.ExpiredSignatureError, pyjwt.InvalidTokenError):
+            pass
+
+    raise HTTPException(status_code=401, detail="Not authenticated")
 
 async def get_optional_user(request: Request):
     try:
@@ -76,7 +102,34 @@ async def get_optional_user(request: Request):
     except HTTPException:
         return None
 
+# --- Seed Admin on Startup ---
+@app.on_event("startup")
+async def seed_admin():
+    existing = await db.users.find_one({"email": ADMIN_EMAIL}, {"_id": 0})
+    if not existing:
+        await db.users.insert_one({
+            "user_id": f"user_{uuid.uuid4().hex[:12]}",
+            "email": ADMIN_EMAIL,
+            "name": "Rohith Puli",
+            "picture": "",
+            "role": "admin",
+            "password_hash": hash_password(ADMIN_PASSWORD),
+            "created_at": datetime.now(timezone.utc)
+        })
+        logger.info(f"Admin user seeded: {ADMIN_EMAIL}")
+    else:
+        # Ensure role and password_hash are set
+        updates = {}
+        if "role" not in existing or existing.get("role") != "admin":
+            updates["role"] = "admin"
+        if "password_hash" not in existing:
+            updates["password_hash"] = hash_password(ADMIN_PASSWORD)
+        if updates:
+            await db.users.update_one({"email": ADMIN_EMAIL}, {"$set": updates})
+
 # --- Auth Endpoints ---
+
+# Google OAuth - restricted to admin email only
 @api_router.post("/auth/session")
 async def exchange_session(request: Request, response: Response):
     body = await request.json()
@@ -95,10 +148,14 @@ async def exchange_session(request: Request, response: Response):
         logger.error(f"Auth error: {e}")
         raise HTTPException(status_code=401, detail="Authentication failed")
 
-    email = data.get("email")
+    email = data.get("email", "").lower()
     name = data.get("name")
     picture = data.get("picture", "")
     session_token = data.get("session_token", str(uuid.uuid4()))
+
+    # RESTRICT: Only admin email can access
+    if email != ADMIN_EMAIL:
+        raise HTTPException(status_code=403, detail="Access denied. Only the portfolio owner can access the admin panel.")
 
     existing = await db.users.find_one({"email": email}, {"_id": 0})
     if existing:
@@ -107,16 +164,13 @@ async def exchange_session(request: Request, response: Response):
     else:
         user_id = f"user_{uuid.uuid4().hex[:12]}"
         await db.users.insert_one({
-            "user_id": user_id,
-            "email": email,
-            "name": name,
-            "picture": picture,
+            "user_id": user_id, "email": email, "name": name, "picture": picture,
+            "role": "admin", "password_hash": hash_password(ADMIN_PASSWORD),
             "created_at": datetime.now(timezone.utc)
         })
 
     await db.user_sessions.insert_one({
-        "user_id": user_id,
-        "session_token": session_token,
+        "user_id": user_id, "session_token": session_token,
         "expires_at": datetime.now(timezone.utc) + timedelta(days=7),
         "created_at": datetime.now(timezone.utc)
     })
@@ -128,6 +182,62 @@ async def exchange_session(request: Request, response: Response):
     )
     return {"user_id": user_id, "email": email, "name": name, "picture": picture}
 
+# Password-based login
+@api_router.post("/auth/login")
+async def password_login(request: Request, response: Response):
+    body = await request.json()
+    email = body.get("email", "").strip().lower()
+    password = body.get("password", "")
+    if not email or not password:
+        raise HTTPException(status_code=400, detail="Email and password required")
+
+    # Only admin can login
+    if email != ADMIN_EMAIL:
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    user = await db.users.find_one({"email": email})
+    if not user or "password_hash" not in user:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    if not verify_password(password, user["password_hash"]):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    user_id = user["user_id"]
+    access_token = pyjwt.encode(
+        {"sub": user_id, "email": email, "exp": datetime.now(timezone.utc) + timedelta(days=7)},
+        JWT_SECRET, algorithm="HS256"
+    )
+
+    response.set_cookie(
+        key="access_token", value=access_token,
+        httponly=True, secure=True, samesite="none",
+        path="/", max_age=7*24*60*60
+    )
+    return {"user_id": user_id, "email": email, "name": user.get("name", ""), "picture": user.get("picture", "")}
+
+# Change password
+@api_router.post("/auth/change-password")
+async def change_password(request: Request, user=Depends(get_current_user)):
+    body = await request.json()
+    current_password = body.get("current_password", "")
+    new_password = body.get("new_password", "")
+    if not current_password or not new_password:
+        raise HTTPException(status_code=400, detail="Both current and new password required")
+    if len(new_password) < 6:
+        raise HTTPException(status_code=400, detail="New password must be at least 6 characters")
+
+    user_doc = await db.users.find_one({"user_id": user["user_id"]})
+    if not user_doc or "password_hash" not in user_doc:
+        raise HTTPException(status_code=400, detail="No password set for this account")
+    if not verify_password(current_password, user_doc["password_hash"]):
+        raise HTTPException(status_code=401, detail="Current password is incorrect")
+
+    await db.users.update_one(
+        {"user_id": user["user_id"]},
+        {"$set": {"password_hash": hash_password(new_password)}}
+    )
+    return {"status": "success", "message": "Password changed successfully"}
+
 @api_router.get("/auth/me")
 async def auth_me(user=Depends(get_current_user)):
     return user
@@ -138,6 +248,7 @@ async def logout(request: Request, response: Response):
     if session_token:
         await db.user_sessions.delete_many({"session_token": session_token})
     response.delete_cookie("session_token", path="/", secure=True, samesite="none")
+    response.delete_cookie("access_token", path="/", secure=True, samesite="none")
     return {"message": "Logged out"}
 
 # --- Content Endpoints (editable portfolio sections) ---
