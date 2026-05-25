@@ -35,8 +35,8 @@ export default function ProjectsSection({ projects, contentData }) {
                 <div className="flex justify-between px-2 py-1 bg-[#EDE8DE] border-b border-[#D4CBB8]">
                   {Array.from({ length: 8 }).map((_, j) => (<div key={j} className="w-3 h-2 rounded-sm bg-[#D4CBB8]" />))}
                 </div>
-                <div className="overflow-hidden relative">
-                  <img src={project.image} alt={project.title} className="w-full h-auto block transition-transform duration-700 group-hover:scale-105" />
+                <div className="aspect-[4/3] overflow-hidden relative">
+                  <img src={project.image} alt={project.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                   <div className="absolute inset-0 bg-[#4A7A12]/0 group-hover:bg-[#4A7A12]/10 transition-colors duration-300 flex items-center justify-center">
                     <ExternalLink className="text-[#4A7A12] opacity-0 group-hover:opacity-100 transition-opacity duration-300" size={32} />
                   </div>
