@@ -590,11 +590,19 @@ async def upload_file(request: Request, user=Depends(get_current_user)):
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.uploads.insert_one(file_doc)
-    return {"file_id": file_id, "url": f"/api/files/{file_id}"}
+    return {"file_id": file_id, "url": f"/api/files/{stored_name}"}
 
-@api_router.get("/files/{file_id}")
+@api_router.get("/files/{file_id:path}")
 async def get_file(file_id: str):
-    doc = await db.uploads.find_one({"file_id": file_id}, {"_id": 0})
+    # Strip extension if present (e.g. "f_xxx.mp4" -> "f_xxx")
+    clean_id = file_id.rsplit(".", 1)[0] if "." in file_id else file_id
+
+    # Try direct match first (stored_name with extension), then by file_id
+    doc = await db.uploads.find_one({"stored_name": file_id}, {"_id": 0})
+    if not doc:
+        doc = await db.uploads.find_one({"file_id": clean_id}, {"_id": 0})
+    if not doc:
+        doc = await db.uploads.find_one({"file_id": file_id}, {"_id": 0})
     if not doc:
         raise HTTPException(status_code=404, detail="File not found")
 
@@ -632,6 +640,25 @@ async def get_file(file_id: str):
     if content_type == "application/pdf":
         headers["Content-Disposition"] = f'attachment; filename="{doc.get("file_name", "resume.pdf")}"'
     return StreamingResponse(io.BytesIO(binary), media_type=content_type, headers=headers)
+
+
+# --- File type lookup for multiple files ---
+@api_router.post("/files/types")
+async def get_file_types(request: Request):
+    body = await request.json()
+    urls = body.get("urls", [])
+    result = {}
+    for url in urls:
+        # Extract file_id from URL like /api/files/f_xxx or full URL
+        parts = url.rstrip("/").split("/")
+        fid = parts[-1] if parts else ""
+        clean_id = fid.rsplit(".", 1)[0] if "." in fid else fid
+        doc = await db.uploads.find_one({"file_id": clean_id}, {"_id": 0, "file_type": 1, "extension": 1})
+        if doc:
+            result[url] = doc.get("file_type", "image")
+        else:
+            result[url] = "image"
+    return result
 
 # --- Contacts list for admin ---
 @api_router.get("/contacts")

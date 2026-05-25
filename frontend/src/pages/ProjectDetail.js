@@ -11,6 +11,7 @@ export default function ProjectDetail() {
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [lightboxImg, setLightboxImg] = useState(null);
+  const [fileTypes, setFileTypes] = useState({});
 
   useEffect(() => {
     fetch(`${API}/projects/${projectId}`)
@@ -18,8 +19,21 @@ export default function ProjectDetail() {
         if (!r.ok) throw new Error("Not found");
         return r.json();
       })
-      .then((data) => {
+      .then(async (data) => {
         setProject(data);
+        // Fetch file types for all media URLs
+        const allUrls = [...(data.detail_images || [])];
+        if (data.video_url) allUrls.push(data.video_url);
+        if (allUrls.length > 0) {
+          try {
+            const typesRes = await fetch(`${API}/files/types`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ urls: allUrls }),
+            });
+            if (typesRes.ok) setFileTypes(await typesRes.json());
+          } catch {}
+        }
         setLoading(false);
       })
       .catch(() => {
@@ -45,13 +59,20 @@ export default function ProjectDetail() {
   }
 
   const detailImages = project.detail_images || [project.image];
-  const hasVideo = project.video_url;
+  const videoUrl = project.video_url;
 
-  // Combine all media: detail images + video_url if present
-  const allMedia = [...detailImages];
-  if (hasVideo && !allMedia.includes(hasVideo)) {
-    allMedia.push(hasVideo);
+  // Build media list using fileTypes from backend
+  const allMedia = detailImages.map(url => ({
+    url,
+    type: fileTypes[url] === "video" ? "video" : (/\.(mp4|mov|avi|webm|mkv|mpeg|m4v)$/i.test(url) ? "video" : "image")
+  }));
+  if (videoUrl && !detailImages.includes(videoUrl)) {
+    allMedia.push({ url: videoUrl, type: "video" });
   }
+  // Mark anything matching video_url as video
+  allMedia.forEach(item => {
+    if (item.url === videoUrl && videoUrl) item.type = "video";
+  });
 
   return (
     <div className="min-h-screen bg-[#F5F0E8] paper-texture" data-testid="project-detail-page">
@@ -181,8 +202,8 @@ export default function ProjectDetail() {
           >
             <span className="font-mono-label text-[10px] text-[#4A7A12] mb-6 block">PROJECT GALLERY</span>
             <div className="columns-1 sm:columns-2 gap-4 space-y-4" data-testid="project-detail-gallery">
-              {allMedia.map((url, i) => {
-                const isVideo = /\.(mp4|mov|avi|webm|mkv|mpeg)$/i.test(url) || (url === project.video_url && project.video_url);
+              {allMedia.map((item, i) => {
+                const isVideo = item.type === "video";
                 return (
                   <div
                     key={i}
@@ -192,7 +213,7 @@ export default function ProjectDetail() {
                     {isVideo ? (
                       <div className="relative group/vid">
                         <video
-                          src={url}
+                          src={item.url}
                           muted
                           loop
                           playsInline
@@ -203,9 +224,9 @@ export default function ProjectDetail() {
                         />
                       </div>
                     ) : (
-                      <div className="cursor-pointer" onClick={() => setLightboxImg(url)}>
+                      <div className="cursor-pointer" onClick={() => setLightboxImg(item.url)}>
                         <img
-                          src={url}
+                          src={item.url}
                           alt={`${project.title} - ${i + 1}`}
                           className="w-full h-auto block transition-transform duration-500 group-hover:scale-[1.02]"
                         />
