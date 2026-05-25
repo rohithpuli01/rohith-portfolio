@@ -69,12 +69,12 @@ export default function ProjectDetail() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="relative w-full aspect-[16/7] overflow-hidden border border-[#D4CBB8] bg-white shadow-md mb-12"
+          className="relative w-full overflow-hidden border border-[#D4CBB8] bg-white shadow-md mb-12"
         >
           <img
             src={project.image}
             alt={project.title}
-            className="w-full h-full object-cover"
+            className="w-full h-auto block"
             data-testid="project-detail-cover"
           />
           {/* Tags overlay */}
@@ -163,7 +163,7 @@ export default function ProjectDetail() {
                 <video
                   src={project.video_url}
                   controls
-                  className="w-full border border-[#D4CBB8]"
+                  className="w-full h-auto block border border-[#D4CBB8]"
                   data-testid="project-detail-video"
                 />
               </div>
@@ -197,14 +197,14 @@ export default function ProjectDetail() {
                     onClick={() => !isVideo && setLightboxImg(img)}
                     data-testid={`project-gallery-img-${i}`}
                   >
-                    <div className={`${i === 0 && detailImages.length > 1 ? "md:col-span-2 aspect-[16/9]" : "aspect-[4/3]"} overflow-hidden`}>
+                    <div className="overflow-hidden">
                       {isVideo ? (
-                        <video src={img} controls className="w-full h-full object-cover" />
+                        <video src={img} controls className="w-full h-auto block" />
                       ) : (
                         <img
                           src={img}
                           alt={`${project.title} - ${i + 1}`}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          className="w-full h-auto block transition-transform duration-500 group-hover:scale-[1.02]"
                         />
                       )}
                     </div>
